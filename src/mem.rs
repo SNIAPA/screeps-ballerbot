@@ -23,7 +23,7 @@ struct SpawnMem {}
 
 pub fn clean_creeps() -> Result<()> {
     let mut mem =
-        serde_json::from_str::<RootMem>(&screeps::raw_memory::get().as_string().ok_or(MyError)?)?;
+        serde_json::from_str::<RootMem>(&screeps::raw_memory::get().as_string().ok_or(MyError {message: "Cant get memory"})?)?;
 
     let alive_creeps = game::creeps().keys().collect::<Vec<String>>();
 

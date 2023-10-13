@@ -1,34 +1,38 @@
 use log::*;
 use wasm_bindgen::prelude::*;
 
-use crate::spawn::run_spawns;
+use crate::spawn::SpawnManager;
+use crate::creep::CreepManager;
+use crate::util::*;
 
+mod creep;
 mod logging;
+mod mem;
 mod spawn;
 mod util;
-mod creep;
-mod mem;
 
 #[wasm_bindgen]
 pub fn setup() {
-    logging::setup_logging(logging::Info);
-    info!("setup")
+    match || -> Result<()> {
+        logging::setup_logging(logging::Info);
+        SpawnManager::setup()?;
+        CreepManager::setup()?;
+        Ok(())
+    }() {
+        Ok(_) => (),
+        Err(e) => error!("{}", e),
+    }
 }
 
 #[wasm_bindgen(js_name = loop)]
-pub fn game_loop()  {
-    match inner_loop() {
-    Ok(_) => (),
-    Err(e) => {
-        error!("{}",e)
-    },
-}
-}
-
-pub fn inner_loop() -> crate::util::Result<()>  {
-    //run_spawns()?;
-    
-
-    Ok(())
+pub fn game_loop() {
+    match || -> Result<()> {
+        SpawnManager::run_all()?;
+        CreepManager::run_all()?;
+        Ok(())
+    }() {
+        Ok(_) => (),
+        Err(e) => error!("{}", e),
+    }
 }
 
