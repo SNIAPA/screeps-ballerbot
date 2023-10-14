@@ -1,8 +1,8 @@
 use log::*;
 use wasm_bindgen::prelude::*;
 
-use crate::spawn::SpawnManager;
 use crate::creep::CreepManager;
+use crate::spawn::SpawnManager;
 use crate::util::*;
 
 mod creep;
@@ -14,13 +14,13 @@ mod util;
 #[wasm_bindgen]
 pub fn setup() {
     match || -> Result<()> {
-        logging::setup_logging(logging::Info);
+        logging::setup_logging(logging::Trace);
         SpawnManager::setup()?;
         CreepManager::setup()?;
         Ok(())
     }() {
         Ok(_) => (),
-        Err(e) => error!("{}", e),
+        Err(e) => warn!("{:?}", e),
     }
 }
 
@@ -32,7 +32,6 @@ pub fn game_loop() {
         Ok(())
     }() {
         Ok(_) => (),
-        Err(e) => error!("{}", e),
+        Err(e) => warn!("{:?}", e),
     }
 }
-
