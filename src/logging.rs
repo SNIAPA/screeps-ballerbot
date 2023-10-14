@@ -1,5 +1,5 @@
 use core::panic::PanicInfo;
-use std::{fmt::Write, panic};
+use std::{fmt::Write, panic, collections::HashMap};
 
 use js_sys::JsString;
 use log::*;
@@ -35,8 +35,16 @@ pub fn setup_logging(verbosity: log::LevelFilter) {
     fern::Dispatch::new()
         .level(verbosity)
         .format(|out, message, record| {
+            let color = match record.level() {
+                Level::Error => "#FF4136",
+                Level::Warn => "#FFDC00",
+                Level::Info => "#DDDDDD",
+                Level::Debug => "#2ECC40",
+                Level::Trace => "7FDBFF",
+            };
             out.finish(format_args!(
-                "({}) {}: {}",
+                "<font color=\"{}\">{}</font> {}: {}",
+                color,
                 record.level(),
                 record.target(),
                 message
