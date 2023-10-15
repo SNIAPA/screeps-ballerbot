@@ -1,4 +1,5 @@
 use log::*;
+use screeps::game;
 use wasm_bindgen::prelude::*;
 
 use crate::creep::CreepManager;
@@ -15,6 +16,7 @@ mod util;
 pub fn setup() {
     match || -> Result<()> {
         logging::setup_logging(logging::Trace);
+        info!("setup");
         SpawnManager::setup()?;
         CreepManager::setup()?;
         Ok(())
@@ -34,4 +36,5 @@ pub fn game_loop() {
         Ok(_) => (),
         Err(e) => warn!("{:?}", e),
     }
+    info!("done: {}", game::cpu::get_used());
 }

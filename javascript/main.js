@@ -28,6 +28,7 @@ module.exports.loop = function() {
       // load the wasm instance!
       wasm_module.initialize_instance();
       // run the setup function, which configures logging
+      
       wasm_module.setup();
       // go ahead and run the loop for its first tick
       wasm_module.loop();

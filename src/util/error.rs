@@ -1,16 +1,22 @@
 use std::{error::Error, fmt};
 
+use screeps::ErrorCode;
 
-pub type Result<T> = std::result::Result<T,Box<dyn Error>>;
 
 #[derive(Debug, Clone)]
 pub struct MyError{
-    pub message: &'static str
+    pub message: String
 }
 
 impl fmt::Display for MyError{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f,"{}", self.message)
+    }
+}
+
+impl From<ErrorCode> for MyError {
+    fn from(code:ErrorCode) -> Self{
+        MyError{message: format!("ErrorCode: {:?}", code) }
     }
 }
 
