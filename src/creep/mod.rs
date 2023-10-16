@@ -30,7 +30,7 @@ impl CreepManager {
         };
 
         let role_manager = match mem.role {
-            role::Role::MINER => Some(MinerManager{creep}),
+            role::Role::MINER => Some(MinerManager { creep: creep.clone() }),
             role::Role::HAULER => None,
         };
         creep_manager.role_manager = Some(RoleManager::MINER(role_manager.unwrap()));
@@ -39,11 +39,11 @@ impl CreepManager {
 
     pub fn run_all() -> Result<()> {
 
-        clean_creeps()?;
-
-
         CREEP_MANAGERS.with(|creep_managers_refcell| {
-            let mut creeps = game::creeps().keys().zip(game::creeps().values()).collect::<HashMap<String,Creep>>();
+            let mut creeps = game::creeps()
+                .keys()
+                .zip(game::creeps().values())
+                .collect::<HashMap<String, Creep>>();
 
             let mut creep_managers = creep_managers_refcell.borrow_mut();
             for creep_manager in creep_managers.iter_mut() {
@@ -53,18 +53,16 @@ impl CreepManager {
                         message: "Creep not found".to_string(),
                     })
                     .unwrap();
-                debug!("1: {:?}",creep.get_parsed_memory());
                 creep_manager.creep = creep;
                 creep_manager.run().unwrap();
                 creeps.remove(&creep_manager.name);
             }
-            for name in creeps.keys(){
+            for name in creeps.keys() {
                 let creep = creeps.get(name).unwrap();
                 info!("adding manager: {:?}", name);
                 let mut creep_manager = CreepManager::new(creep.clone(), name.to_string());
                 creep_manager.run().unwrap();
                 creep_managers.push(creep_manager);
-
             }
         });
 
@@ -83,7 +81,6 @@ impl CreepManager {
         Ok(())
     }
     fn run(&mut self) -> Result<()> {
-        debug!("{:?}",self.creep.get_parsed_memory());
         self.role_manager.as_mut().unwrap().run(self.creep.clone());
         Ok(())
     }

@@ -3,6 +3,7 @@ use screeps::game;
 use wasm_bindgen::prelude::*;
 
 use crate::creep::CreepManager;
+use crate::mem::creep::clean_creeps;
 use crate::spawn::SpawnManager;
 use crate::util::*;
 
@@ -18,7 +19,7 @@ pub fn setup() {
         logging::setup_logging(logging::Trace);
         info!("setup");
         SpawnManager::setup()?;
-        CreepManager::setup()?;
+        //CreepManager::setup()?;
         Ok(())
     }() {
         Ok(_) => (),
@@ -29,6 +30,7 @@ pub fn setup() {
 #[wasm_bindgen(js_name = loop)]
 pub fn game_loop() {
     match || -> Result<()> {
+        clean_creeps()?;
         SpawnManager::run_all()?;
         CreepManager::run_all()?;
         Ok(())

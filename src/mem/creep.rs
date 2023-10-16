@@ -42,9 +42,7 @@ impl GetParsedCreepMemory for Creep {
         let raw_mem = js_sys::JSON::stringify(&self.memory())
             .unwrap()
             .as_string()
-            .ok_or(MyError {
-                message: "Cant get memory".to_string(),
-            })?;
+            .unwrap();
         Ok(serde_json::from_str::<CreepMem>(&raw_mem)?)
     }
 }
@@ -59,7 +57,6 @@ pub fn clean_creeps() -> Result<()> {
     }
 
     let mut mem = serde_json::from_str::<RootMem>(raw_mem).unwrap();
-    debug!("{:?}", mem.creeps.keys());
 
     let alive_creeps = game::creeps().keys().collect::<Vec<String>>();
 
