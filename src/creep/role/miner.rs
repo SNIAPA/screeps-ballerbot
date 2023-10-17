@@ -30,12 +30,23 @@ impl MinerManager {
                 }
                 Err(ErrorCode::NotInRange) => {
                     match creep.move_to(source) {
-                        Err(ErrorCode::Tired | ErrorCode::NoPath) => Ok(()),
+                        Err(ErrorCode::NoPath) => {
+                            creep.say("❌", false).unwrap();
+                            Ok(())
+                        },
+                        Err(ErrorCode::Tired) => {
+                            creep.say("🚬", false).unwrap();
+                            Ok(())
+                        },
                         Err(e) => Err(e),
-                        Ok(_) => Ok(()),
+                        Ok(_) => {
+
+                            creep.say("walking", false).unwrap();
+                            Ok(())
+                            }
+                            
                     }
                     .unwrap();
-                    creep.say("walking", false).unwrap();
                 }
                 _ => (),
             }

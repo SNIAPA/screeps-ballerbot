@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use log::*;
-use screeps::game;
+use screeps::{game, Room, RoomName};
 use wasm_bindgen::prelude::*;
 
 use crate::creep::CreepManager;
@@ -11,6 +13,7 @@ mod creep;
 mod logging;
 mod mem;
 mod spawn;
+mod room;
 mod util;
 
 #[wasm_bindgen]
@@ -29,6 +32,9 @@ pub fn setup() {
 
 #[wasm_bindgen(js_name = loop)]
 pub fn game_loop() {
+    let rooms = HashMap::from(game::rooms());
+    debug!("{:?}", rooms);
+
     match || -> Result<()> {
         clean_creeps()?;
         SpawnManager::run_all()?;

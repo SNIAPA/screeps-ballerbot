@@ -2,10 +2,8 @@ use std::cell::RefCell;
 
 use log::debug;
 use screeps::{game, SpawnOptions, StructureSpawn};
-use wasm_bindgen::JsValue;
 
 use crate::{
-    creep::role::miner::MinerManager,
     mem::creep::CreepMem,
     util::{error::MyError, Result},
 };
@@ -37,12 +35,12 @@ impl SpawnManager {
         Ok(())
     }
     pub fn setup() -> Result<()> {
-        SPAWN_MANAGERS.with(|spawn_manager| {
-            let mut spawn_manager = spawn_manager.borrow_mut();
+        SPAWN_MANAGERS.with(|spawn_managers| {
+            let mut spawn_managers = spawn_managers.borrow_mut();
             let spawns = game::spawns();
 
-            spawns.keys().for_each(|spawn| {
-                spawn_manager.push(SpawnManager {
+            spawns.iter().for_each(|(name,spawn)| {
+                spawn_managers.push(SpawnManager {
                     spawn: spawns.get(spawn.clone()).unwrap(),
                     name: spawn,
                 })
@@ -52,7 +50,7 @@ impl SpawnManager {
     }
     fn run(&mut self, spawn: StructureSpawn) -> Result<()> {
         self.spawn = spawn;
-        self.spawn(MinerManager::recepie())?;
+        //self.spawn(MinerManager::recepie())?;
         Ok(())
     }
     fn spawn(&self, recepie: Recepie) -> Result<()> {
@@ -82,7 +80,8 @@ impl SpawnManager {
             Ok(_) => {
                 debug!("SPAWNING{:?} {:?}", recepie, mem);
                 self.spawn
-                    .spawn_creep_with_options(&recepie.parts, &name, &options).unwrap();
+                    .spawn_creep_with_options(&recepie.parts, &name, &options)
+                    .unwrap();
                 Ok(())
             }
             Err(e) => match e {

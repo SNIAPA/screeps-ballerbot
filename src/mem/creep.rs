@@ -71,9 +71,9 @@ pub fn clean_creeps() -> Result<()> {
 
     CREEP_MANAGERS.with(|creep_managers_refcell| {
         let mut creep_managers = creep_managers_refcell.borrow_mut();
-        creep_managers.retain(|creep_manager| {
-            if !alive_creeps.contains(&creep_manager.name) {
-                info!("removing manager: {:?}", &creep_manager.name);
+        creep_managers.retain(|name,_| {
+            if !alive_creeps.contains(name) {
+                info!("removing manager: {:?}", name);
                 return false;
             }
             return true;
