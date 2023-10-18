@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::HashMap};
 use log::{debug, info};
 use screeps::{game, Creep};
 
-use crate::{mem::creep::GetParsedCreepMemory, util::Result};
+use crate::{mem::creep::GetParsedCreepMemory, util::{Result, ToRustHashMap}};
 
 use self::role::{miner::MinerManager, RoleManager};
 
@@ -36,10 +36,7 @@ impl CreepManager {
 
     pub fn run_all() -> Result<()> {
         CREEP_MANAGERS.with(|creep_managers_refcell| {
-            let mut creeps = game::creeps()
-                .keys()
-                .zip(game::creeps().values())
-                .collect::<HashMap<String, Creep>>();
+            let mut creeps = game::creeps().to_rust_hash_map();
 
             let mut creep_managers = creep_managers_refcell.borrow_mut();
             for (name, creep_manager) in creep_managers.iter_mut() {

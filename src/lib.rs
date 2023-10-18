@@ -20,7 +20,7 @@ pub fn setup() {
         logging::setup_logging(logging::Trace);
         info!("setup");
         SpawnManager::setup()?;
-        //CreepManager::setup()?;
+        CreepManager::setup()?;
         Ok(())
     }() {
         Ok(_) => (),
