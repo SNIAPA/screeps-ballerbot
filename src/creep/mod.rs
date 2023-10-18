@@ -3,10 +3,7 @@ use std::{cell::RefCell, collections::HashMap};
 use log::{debug, info};
 use screeps::{game, Creep};
 
-use crate::{
-    mem::creep::{clean_creeps, GetParsedCreepMemory},
-    util::{error::MyError, Result},
-};
+use crate::{mem::creep::GetParsedCreepMemory, util::Result};
 
 use self::role::{miner::MinerManager, RoleManager};
 

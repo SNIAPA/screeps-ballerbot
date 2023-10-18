@@ -5,7 +5,7 @@ use screeps::{game, SpawnOptions, StructureSpawn};
 
 use crate::{
     mem::creep::CreepMem,
-    util::{error::MyError, Result},
+    util::{error::MyError, Result, ToRustHashMap},
 };
 
 use self::recepie::Recepie;
@@ -14,7 +14,6 @@ pub mod recepie;
 
 #[derive(Debug, Clone)]
 pub struct SpawnManager {
-    spawn: StructureSpawn,
     pub name: String,
 }
 
@@ -28,7 +27,7 @@ impl SpawnManager {
                         message: "Spawn not found".to_string(),
                     })
                     .unwrap();
-                spawn_manager.run(spawn).unwrap();
+                spawn_manager.run().unwrap();
             }
         });
 
@@ -37,27 +36,28 @@ impl SpawnManager {
     pub fn setup() -> Result<()> {
         SPAWN_MANAGERS.with(|spawn_managers| {
             let mut spawn_managers = spawn_managers.borrow_mut();
-            let spawns = game::spawns();
+            let spawns = game::spawns().to_rust_hash_map();
 
-            spawns.iter().for_each(|(name,spawn)| {
-                spawn_managers.push(SpawnManager {
-                    spawn: spawns.get(spawn.clone()).unwrap(),
-                    name: spawn,
-                })
-            });
+            spawns
+                .iter()
+                .for_each(|(name, spawn)| spawn_managers.push(SpawnManager { name: name.to_string() }));
         });
         Ok(())
     }
-    fn run(&mut self, spawn: StructureSpawn) -> Result<()> {
-        self.spawn = spawn;
+    fn run(&mut self) -> Result<()> {
         //self.spawn(MinerManager::recepie())?;
         Ok(())
     }
-    fn spawn(&self, recepie: Recepie) -> Result<()> {
+    fn spawn(&self) -> StructureSpawn {
+        game::spawns().get(self.name.clone()).unwrap()
+    }
+    fn spawn_creep(&self, recepie: Recepie) -> Result<()> {
+        let spawn = self.spawn();
+
         let name = format!(
             "{}@{}#{}",
             recepie.role.as_string(),
-            self.spawn.room().unwrap().name(),
+            spawn.room().unwrap().name(),
             game::time()
         );
         let mem = CreepMem {
@@ -73,13 +73,13 @@ impl SpawnManager {
             .dry_run(true);
 
         let test = self
-            .spawn
+            .spawn()
             .spawn_creep_with_options(&recepie.parts, &name, &options_test);
 
         match test {
             Ok(_) => {
                 debug!("SPAWNING{:?} {:?}", recepie, mem);
-                self.spawn
+                spawn
                     .spawn_creep_with_options(&recepie.parts, &name, &options)
                     .unwrap();
                 Ok(())

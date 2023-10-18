@@ -8,7 +8,7 @@ use creep::CreepMem;
 
 #[derive(Deserialize,Serialize, Debug, Clone)]
 struct RootMem {
-    creeps: HashMap<String, Option<CreepMem>>,
+    creeps: Option<HashMap<String, Option<CreepMem>>>,
 }
 
 #[derive(Deserialize, Serialize,Debug, Clone)]

@@ -6,7 +6,7 @@ use screeps::{game, Creep};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    creep::{role::Role, CREEP_MANAGERS},
+    creep::{self, role::Role, CREEP_MANAGERS},
     util::{error::MyError, Result},
 };
 
@@ -48,21 +48,25 @@ impl GetParsedCreepMemory for Creep {
 }
 
 pub fn clean_creeps() -> Result<()> {
-    let raw_mem = &screeps::raw_memory::get().as_string().ok_or(MyError {
-        message: "Cant get memory".to_string(),
-    })?;
+    let mut raw_mem = screeps::raw_memory::get().as_string().unwrap();
 
-    if raw_mem == "{}" {
-        return Ok(());
+    if raw_mem.as_str() == "" {
+        raw_mem = "{}".to_owned();
     }
 
-    let mut mem = serde_json::from_str::<RootMem>(raw_mem).unwrap();
+    let mut mem = serde_json::from_str::<RootMem>(&raw_mem).unwrap();
 
     let alive_creeps = game::creeps().keys().collect::<Vec<String>>();
 
-    for creep in mem.clone().creeps.keys() {
+    let mut creeps = mem.creeps.clone();
+    if let None = creeps {
+        return Ok(());
+    }
+    let creeps = creeps.as_mut().unwrap();
+
+    for creep in creeps.keys() {
         if !alive_creeps.contains(creep) {
-            mem.creeps.remove(creep);
+            mem.creeps.as_mut().unwrap().remove(creep);
             info!("removing mem: {:?}", creep)
         }
     }
@@ -71,7 +75,7 @@ pub fn clean_creeps() -> Result<()> {
 
     CREEP_MANAGERS.with(|creep_managers_refcell| {
         let mut creep_managers = creep_managers_refcell.borrow_mut();
-        creep_managers.retain(|name,_| {
+        creep_managers.retain(|name, _| {
             if !alive_creeps.contains(name) {
                 info!("removing manager: {:?}", name);
                 return false;
