@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use js_sys::JsString;
 use log::{debug, info};
-use screeps::{game, Creep};
+use screeps::{game, Creep, RoomName};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -15,6 +15,7 @@ use super::RootMem;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct CreepMem {
     pub role: Role,
+    pub room: RoomName,
     pub _move: Option<MoveMem>,
 }
 

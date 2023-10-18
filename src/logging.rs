@@ -43,7 +43,7 @@ pub fn setup_logging(verbosity: log::LevelFilter) {
                 Level::Trace => "7FDBFF",
             };
             out.finish(format_args!(
-                "<font color=\"{}\">{}</font> {}: {}",
+                "<font size=\"+0.5\"><font color=\"{}\" >{}</font> {}: {}</font>",
                 color,
                 record.level(),
                 record.target(),

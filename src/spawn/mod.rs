@@ -18,33 +18,7 @@ pub struct SpawnManager {
 }
 
 impl SpawnManager {
-    pub fn run_all() -> Result<()> {
-        SPAWN_MANAGERS.with(|creep_managers_refcell| {
-            for spawn_manager in creep_managers_refcell.borrow_mut().iter_mut() {
-                let spawn = game::spawns()
-                    .get(spawn_manager.name.clone())
-                    .ok_or(MyError {
-                        message: "Spawn not found".to_string(),
-                    })
-                    .unwrap();
-                spawn_manager.run().unwrap();
-            }
-        });
-
-        Ok(())
-    }
-    pub fn setup() -> Result<()> {
-        SPAWN_MANAGERS.with(|spawn_managers| {
-            let mut spawn_managers = spawn_managers.borrow_mut();
-            let spawns = game::spawns().to_rust_hash_map();
-
-            spawns
-                .iter()
-                .for_each(|(name, spawn)| spawn_managers.push(SpawnManager { name: name.to_string() }));
-        });
-        Ok(())
-    }
-    fn run(&mut self) -> Result<()> {
+    pub fn run(&mut self) -> Result<()> {
         //self.spawn(MinerManager::recepie())?;
         Ok(())
     }
@@ -91,6 +65,3 @@ impl SpawnManager {
     }
 }
 
-thread_local! {
-  pub static SPAWN_MANAGERS: RefCell<Vec<SpawnManager>> = RefCell::new(Vec::new());
-}

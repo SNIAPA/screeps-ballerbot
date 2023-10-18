@@ -5,7 +5,7 @@ use self::miner::MinerManager;
 
 pub mod miner;
 
-#[derive(Debug )]
+#[derive(Debug)]
 pub enum RoleManager {
     //HAULER,
     MINER(MinerManager),
@@ -13,22 +13,18 @@ pub enum RoleManager {
 
 impl RoleManager {
     pub fn run(&mut self, creep: Creep) {
-
         match self {
             RoleManager::MINER(x) => x.run(creep),
         }
-
     }
 }
 
 //TODO: having a emun and a trait like that is a bad idea
 pub trait RoleManagerTrait {
-
-   fn run(&self) {}
-
+    fn run(&self) {}
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, Hash,PartialEq,Eq)]
 pub enum Role {
     HAULER,
     MINER,

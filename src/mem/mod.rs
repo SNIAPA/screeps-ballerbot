@@ -7,8 +7,8 @@ pub mod creep;
 use creep::CreepMem;
 
 #[derive(Deserialize,Serialize, Debug, Clone)]
-struct RootMem {
-    creeps: Option<HashMap<String, Option<CreepMem>>>,
+pub struct RootMem {
+    pub creeps: Option<HashMap<String, Option<CreepMem>>>,
 }
 
 #[derive(Deserialize, Serialize,Debug, Clone)]
