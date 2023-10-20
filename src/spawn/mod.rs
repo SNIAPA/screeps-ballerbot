@@ -1,10 +1,12 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashMap};
 
 use log::debug;
-use screeps::{game, SpawnOptions, StructureSpawn};
+use screeps::{game, Room, SpawnOptions, StructureSpawn};
 
 use crate::{
-    mem::creep::CreepMem,
+    creep::role::Role,
+    mem::creep::{CreepMem, GetParsedCreepMemory},
+    room::{RoomManager, ROOM_MANAGERS},
     util::{error::MyError, Result, ToRustHashMap},
 };
 
@@ -18,8 +20,12 @@ pub struct SpawnManager {
 }
 
 impl SpawnManager {
-    pub fn run(&mut self) -> Result<()> {
-        //self.spawn(MinerManager::recepie())?;
+    pub fn run(&mut self, room_manager: &mut RoomManager) -> Result<()> {
+        let recepie = room_manager.get_next_creep_to_spawn();
+        match recepie {
+            Some(x) => self.spawn_creep(x).unwrap(),
+            None => (),
+        };
         Ok(())
     }
     fn spawn(&self) -> StructureSpawn {
@@ -31,11 +37,12 @@ impl SpawnManager {
         let name = format!(
             "{}@{}#{}",
             recepie.role.as_string(),
-            spawn.room().unwrap().name(),
-            game::time()
+            spawn.room().unwrap().name(), game::time()
         );
+
         let mem = CreepMem {
-            role: crate::creep::role::Role::MINER,
+            room: spawn.room().unwrap().name(),
+            role: recepie.role,
             _move: None,
         };
 
@@ -64,4 +71,3 @@ impl SpawnManager {
         }
     }
 }
-

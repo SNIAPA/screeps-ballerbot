@@ -1,6 +1,10 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::{
+    borrow::BorrowMut,
+    cell::{Cell, RefCell},
+    collections::HashMap,
+};
 
-use log::{debug, info};
+use log::{debug, info, warn};
 use screeps::{game, Creep, RoomName};
 
 use crate::{
@@ -9,15 +13,15 @@ use crate::{
     util::{Result, ToRustHashMap},
 };
 
-use self::role::{miner::MinerManager, RoleManager};
+use self::role::{hauler::HaulerManager, miner::MinerManager, RoleManager};
 
 pub mod role;
+pub mod go_and_do;
 
 #[derive(Debug)]
 pub struct CreepManager {
     pub name: String,
-    role_manager: Option<RoleManager>,
-    room: RoomName
+    role_manager: Box<dyn RoleManager>,
 }
 
 impl Manager for CreepManager {
@@ -27,7 +31,6 @@ impl Manager for CreepManager {
 
             let mut creep_managers = creep_managers_refcell.borrow_mut();
             for (name, creep_manager) in creep_managers.iter_mut() {
-                let creep = game::creeps().get(name.clone()).unwrap();
                 creep_manager.run().unwrap();
                 creeps.remove(name);
             }
@@ -55,41 +58,38 @@ impl Manager for CreepManager {
         Ok(())
     }
     fn run(&mut self) -> Result<()> {
-        let creep = self.creep();
-        self.role_manager.as_mut().unwrap().run(creep);
+        if let Err(e) = self.role_manager.run(self.creep()) {
+            warn!("failed to run {}\n{:#?}", self.name, e)
+        };
         Ok(())
     }
 }
 
 impl CreepManager {
+    fn walk_and_do() -> Result<()> {
+        Ok(())
+    }
     fn creep(&self) -> Creep {
         game::creeps().get(self.name.clone()).unwrap()
     }
     pub fn new(creep: Creep, name: String) -> Self {
         let mem = creep.get_parsed_memory().unwrap();
 
-        let mut creep_manager = Self {
-            name,
-            role_manager: None,
+        let role_manager: Box<dyn RoleManager> = match mem.role {
+            role::Role::MINER => Box::new(MinerManager {}),
+            role::Role::HAULER => Box::new(HaulerManager {}),
         };
 
-        let role_manager = match mem.role {
-            role::Role::MINER => Some(MinerManager {
-                creep: creep.clone(),
-            }),
-            role::Role::HAULER => None,
-        };
-        creep_manager.role_manager = Some(RoleManager::MINER(role_manager.unwrap()));
-        creep_manager
+        Self { name, role_manager }
     }
     pub fn on_death(&self) {
         let raw_mem = screeps::raw_memory::get().as_string().unwrap();
         let mut mem = serde_json::from_str::<RootMem>(&raw_mem).unwrap();
         mem.creeps.unwrap().remove(&self.name);
-
     }
 }
 
 thread_local! {
   pub static CREEP_MANAGERS: RefCell<HashMap<String,CreepManager>> = RefCell::new(HashMap::new());
 }
+

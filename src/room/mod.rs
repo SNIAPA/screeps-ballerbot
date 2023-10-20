@@ -3,20 +3,18 @@ use std::{cell::RefCell, collections::HashMap};
 use crate::{
     creep::role::Role,
     manager::Manager,
-    spawn::SpawnManager,
+    mem::creep::{get_mem, GetParsedCreepMemory},
+    spawn::{recepie::Recepie, SpawnManager},
     util::{Result, ToRustHashMap},
 };
-use log::debug;
-use screeps::{game, Room, RoomName, StructureSpawn};
+
+use screeps::{game, Creep, Room, RoomName};
 
 #[derive(Debug)]
 pub struct RoomManager {
     name: RoomName,
     spawn_managers: HashMap<String, SpawnManager>,
-    required_creeps: HashMap<Role, u8>,
-    //TODO: this will need to be cleaned on creep death
-    //maybe creep.deat() function
-    creeps: Vec<String>,
+    pub required_creeps: HashMap<Role, u8>,
 }
 
 impl Manager for RoomManager {
@@ -42,26 +40,75 @@ impl Manager for RoomManager {
     }
 
     fn run(&mut self) -> Result<()> {
-        debug!("{:#?}", self);
         self.run_spawns()?;
         Ok(())
     }
 }
 
 impl RoomManager {
+    pub fn creeps(&self) -> Vec<Creep> {
+        let mem = get_mem();
+        match mem.creeps {
+            Some(creeps) => creeps
+                .iter()
+                .filter_map(|(name, creep)| {
+                    if creep.as_ref().unwrap().room == self.name {
+                        return game::creeps().get(name.clone());
+                    };
+                    None
+                })
+                .collect(),
+            None => vec![],
+        }
+    }
     fn run_spawns(&mut self) -> Result<()> {
-        for (_, spawn_manager) in self.spawn_managers.iter_mut() {
-            //TODO: match this?
-            spawn_manager.run()?;
+        for (_, spawn_manager) in self.spawn_managers.clone().iter_mut() {
+            spawn_manager.run(self)?;
         }
 
         Ok(())
+    }
+    pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {
+        let created_roles = Vec::from_iter(
+            self.creeps().iter().fold(
+                HashMap::from(
+                    vec![(Role::MINER, 0), (Role::HAULER, 0)]
+                        .iter()
+                        .copied()
+                        .collect::<HashMap<Role, u8>>(),
+                ),
+                |mut acc, creep| {
+                    let role = creep.get_parsed_memory().unwrap().role;
+                    acc.insert(role, acc[&role] + 1);
+                    acc
+                },
+            ),
+        );
+
+        let missing_roles = Vec::from_iter(self.required_creeps.iter())
+            .iter()
+            .zip(created_roles)
+            .map(|val| (val.0 .0.clone(), (val.0 .1 - val.1 .1) as i8))
+            .collect::<HashMap<Role, i8>>();
+
+        missing_roles
+            .iter()
+            .find_map(|(role, count)| {
+                if *count > 0i8 {
+                    return Some(role);
+                }
+                None
+            })
+            .map(|x| x.get_recepie())
     }
     fn new(name: RoomName) -> Self {
         let mut room_manager = RoomManager {
             name,
             spawn_managers: HashMap::new(),
-            required_creeps: vec![(Role::MINER, 2),(Role::HAULER, 2)].iter().copied().collect(),
+            required_creeps: vec![(Role::MINER, 3), (Role::HAULER, 2)]
+                .iter()
+                .copied()
+                .collect(),
         };
         room_manager.spawn_managers = room_manager
             .room()

@@ -1,70 +1,53 @@
+use std::cell::Cell;
+
+use log::{debug, warn};
 use screeps::{find, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties};
 
-use crate::{mem::creep::GetParsedCreepMemory, spawn::recepie::Recepie};
+use crate::{creep::CreepManager, mem::creep::GetParsedCreepMemory, spawn::recepie::Recepie, util::Result};
 
-use super::Role;
+use super::{Role, RoleManager};
 
-#[derive(Debug)]
-pub struct MinerManager {
-    pub creep: Creep,
+#[derive(Debug, Clone)]
+pub struct MinerManager {}
+
+pub fn recepie() -> Recepie {
+    Recepie {
+        parts: vec![Part::Move, Part::Move, Part::Move],
+        role: Role::HAULER,
+    }
 }
 
-impl MinerManager {
-    pub fn recepie() -> Recepie {
-        Recepie {
-            parts: [Part::Move, Part::Work, Part::Carry].into(),
-            role: Role::MINER,
-        }
-    }
-    pub fn run(&mut self, creep: Creep) {
-        self.creep = creep.clone();
+impl RoleManager for MinerManager {
+    fn run(&mut self, creep: Creep) -> Result<()>{
         let room = creep.room().unwrap();
 
         let source = room.find(find::SOURCES, None).first().unwrap().clone();
-        let target = room.find(find::MY_SPAWNS, None).first().unwrap().clone();
 
-        if creep.store().get_free_capacity(Some(ResourceType::Energy)) > 0 {
-            match creep.harvest(&source) {
-                Ok(_) => {
-                    creep.say("mining", false).unwrap();
-                }
-                Err(ErrorCode::NotInRange) => {
-                    match creep.move_to(source) {
-                        Err(ErrorCode::NoPath) => {
-                            creep.say("❌", false).unwrap();
-                            Ok(())
-                        },
-                        Err(ErrorCode::Tired) => {
-                            creep.say("🚬", false).unwrap();
-                            Ok(())
-                        },
-                        Err(e) => Err(e),
-                        Ok(_) => {
-
-                            creep.say("walking", false).unwrap();
-                            Ok(())
-                            }
-                            
-                    }
-                    .unwrap();
-                }
-                _ => (),
+        match creep.harvest(&source) {
+            Ok(_) => {
+                creep.say("⛏️", false).unwrap();
+                Ok(())
             }
-        } else {
-            match creep.transfer(&target, ResourceType::Energy, None) {
-                Ok(_) => {
-                    creep.say("transfer", false).unwrap();
-                }
-                Err(ErrorCode::NotInRange) => {
-                    match creep.move_to(target) {
-                        Err(ErrorCode::Tired | ErrorCode::NoPath) => Ok(()),
-                        Err(e) => Err(e),
-                        Ok(_) => Ok(()),
+            Err(ErrorCode::NotInRange) => {
+                match creep.move_to(source) {
+                    Err(ErrorCode::NoPath) => {
+                        creep.say("❌", false).unwrap();
+                        Ok(())
                     }
-                    .unwrap();
-                    creep.say("walking", false).unwrap();
+                    Err(ErrorCode::Tired) => {
+                        creep.say("🚬", false).unwrap();
+                        Ok(())
+                    }
+                Err(x) => {
+                    warn!("{:#?}", x);
+                    Ok(())
                 }
-                _ => (),
+                    Ok(_) => Ok(()),
+                }
+            }
+            x => {
+                warn!("{:?}", x);
+                Ok(())
             }
         }
     }

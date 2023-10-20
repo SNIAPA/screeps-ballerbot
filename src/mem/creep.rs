@@ -48,14 +48,18 @@ impl GetParsedCreepMemory for Creep {
     }
 }
 
-pub fn clean_creeps() -> Result<()> {
+pub fn get_mem() -> RootMem {
     let mut raw_mem = screeps::raw_memory::get().as_string().unwrap();
 
     if raw_mem.as_str() == "" {
         raw_mem = "{}".to_owned();
     }
 
-    let mut mem = serde_json::from_str::<RootMem>(&raw_mem).unwrap();
+    serde_json::from_str::<RootMem>(&raw_mem).unwrap()
+}
+
+pub fn clean_creeps() -> Result<()> {
+    let mut mem = get_mem();
 
     let alive_creeps = game::creeps().keys().collect::<Vec<String>>();
 
