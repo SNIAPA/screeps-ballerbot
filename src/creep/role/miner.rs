@@ -12,8 +12,8 @@ pub struct MinerManager {}
 
 pub fn recepie() -> Recepie {
     Recepie {
-        parts: vec![Part::Move, Part::Move, Part::Move],
-        role: Role::HAULER,
+        parts: vec![Part::Work, Part::Move, Part::Move],
+        role: Role::MINER,
     }
 }
 

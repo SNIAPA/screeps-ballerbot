@@ -21,11 +21,9 @@ pub struct SpawnManager {
 
 impl SpawnManager {
     pub fn run(&mut self, room_manager: &mut RoomManager) -> Result<()> {
-        let recepie = room_manager.get_next_creep_to_spawn();
-        match recepie {
-            Some(x) => self.spawn_creep(x).unwrap(),
-            None => (),
-        };
+        if let Some(recepie) = room_manager.get_next_creep_to_spawn() {
+            self.spawn_creep(recepie).unwrap();
+        }
         Ok(())
     }
     fn spawn(&self) -> StructureSpawn {

@@ -8,6 +8,7 @@ use crate::{
     util::{Result, ToRustHashMap},
 };
 
+use log::debug;
 use screeps::{game, Creep, Room, RoomName};
 
 #[derive(Debug)]
@@ -69,37 +70,35 @@ impl RoomManager {
         Ok(())
     }
     pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {
-        let created_roles = Vec::from_iter(
-            self.creeps().iter().fold(
-                HashMap::from(
-                    vec![(Role::MINER, 0), (Role::HAULER, 0)]
-                        .iter()
-                        .copied()
-                        .collect::<HashMap<Role, u8>>(),
-                ),
-                |mut acc, creep| {
-                    let role = creep.get_parsed_memory().unwrap().role;
-                    acc.insert(role, acc[&role] + 1);
-                    acc
-                },
+        let created_roles = self.creeps().iter().fold(
+            HashMap::from(
+                vec![(Role::MINER, 0), (Role::HAULER, 0)]
+                    .iter()
+                    .copied()
+                    .collect::<HashMap<Role, u8>>(),
             ),
+            |mut acc, creep| {
+                let role = creep.get_parsed_memory().unwrap().role;
+                acc.insert(role, acc[&role] + 1);
+                acc
+            },
         );
 
-        let missing_roles = Vec::from_iter(self.required_creeps.iter())
+        Vec::from_iter(self.required_creeps.iter())
             .iter()
-            .zip(created_roles)
-            .map(|val| (val.0 .0.clone(), (val.0 .1 - val.1 .1) as i8))
-            .collect::<HashMap<Role, i8>>();
-
-        missing_roles
-            .iter()
-            .find_map(|(role, count)| {
-                if *count > 0i8 {
-                    return Some(role);
+            .fold(None, |acc, (role, required)| {
+                let count = created_roles.get(role).unwrap();
+                if let Some((_, x)) = acc {
+                    if x == 0 {
+                        return acc;
+                    }
+                }
+                if count < *required {
+                    return Some((role, *count));
                 }
                 None
             })
-            .map(|x| x.get_recepie())
+            .map(|x| x.0.get_recepie())
     }
     fn new(name: RoomName) -> Self {
         let mut room_manager = RoomManager {
