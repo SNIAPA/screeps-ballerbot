@@ -11,6 +11,7 @@ use super::CreepManager;
 
 pub mod hauler;
 pub mod miner;
+pub mod upgrader;
 
 // #[derive(Debug,Clone)]
 // pub enum RoleManager {
@@ -22,19 +23,22 @@ pub mod miner;
 pub enum Role {
     HAULER,
     MINER,
+    UPGRADER,
 }
 
 impl Role {
     pub fn as_string(&self) -> &str {
-        match self {
+        match self.get_recepie().role {
             Role::HAULER => "HAULER",
             Role::MINER => "MINER",
+            Role::UPGRADER => "UPGRADER",
         }
     }
     pub fn get_recepie(&self) -> Recepie {
         match self {
             Role::HAULER => hauler::recepie(),
             Role::MINER => miner::recepie(),
+            Role::UPGRADER => miner::recepie(),
         }
     }
 }

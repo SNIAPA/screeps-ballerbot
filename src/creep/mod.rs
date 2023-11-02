@@ -13,7 +13,7 @@ use crate::{
     util::{Result, ToRustHashMap},
 };
 
-use self::role::{hauler::HaulerManager, miner::MinerManager, RoleManager};
+use self::role::{hauler::HaulerManager, miner::MinerManager, RoleManager, upgrader::UpgraderManager};
 
 pub mod role;
 pub mod go_and_do;
@@ -78,6 +78,7 @@ impl CreepManager {
         let role_manager: Box<dyn RoleManager> = match mem.role {
             role::Role::MINER => Box::new(MinerManager {}),
             role::Role::HAULER => Box::new(HaulerManager {}),
+            role::Role::UPGRADER => Box::new(UpgraderManager {}),
         };
 
         Self { name, role_manager }

@@ -76,7 +76,7 @@ impl RoomManager {
     pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {
         let mut created_roles = self.creeps().iter().fold(
             HashMap::from(
-                vec![(Role::MINER, 0), (Role::HAULER, 0)]
+                vec![(Role::MINER, 0), (Role::HAULER, 0),(Role::UPGRADER, 0)]
                     .iter()
                     .copied()
                     .collect::<HashMap<Role, u8>>(),
@@ -96,7 +96,6 @@ impl RoomManager {
 
                 if count > &mut 0 {
                     count.sub_assign(1);
-
                     order.next();
                 }
 
@@ -109,7 +108,14 @@ impl RoomManager {
         let mut room_manager = RoomManager {
             name,
             spawn_managers: HashMap::new(),
-            spawn_order: vec![Role::MINER, Role::HAULER, Role::MINER, Role::HAULER, Role::MINER, Role::HAULER],
+            //TODO: this should be dynamic based on the rcl and if we are getting attacked, and stuff
+            spawn_order: vec![
+                Role::MINER,
+                Role::HAULER,
+                Role::MINER,
+                Role::MINER,
+                Role::UPGRADER,
+            ],
         };
         room_manager.spawn_managers = room_manager
             .room()
