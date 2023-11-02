@@ -9,3 +9,10 @@ pub struct Recepie {
     pub role: Role
 
 }
+
+impl Recepie {
+    pub fn cost(&self) -> u32 {
+        self.parts.iter().fold(0, |acc, x| acc + x.cost())
+        
+    }
+}

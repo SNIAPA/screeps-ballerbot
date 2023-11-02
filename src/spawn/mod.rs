@@ -1,7 +1,9 @@
 use std::{cell::RefCell, collections::HashMap};
 
+use js_sys::JsString;
 use log::debug;
-use screeps::{game, Room, SpawnOptions, StructureSpawn};
+use screeps::{game, look::ENERGY, HasPosition, Room, SpawnOptions, StructureSpawn, TextStyle};
+use wasm_bindgen::JsStatic;
 
 use crate::{
     creep::role::Role,
@@ -35,7 +37,8 @@ impl SpawnManager {
         let name = format!(
             "{}@{}#{}",
             recepie.role.as_string(),
-            spawn.room().unwrap().name(), game::time()
+            spawn.room().unwrap().name(),
+            game::time()
         );
 
         let mem = CreepMem {
@@ -55,17 +58,40 @@ impl SpawnManager {
             .spawn()
             .spawn_creep_with_options(&recepie.parts, &name, &options_test);
 
+        let mut say_text = String::new();
         match test {
             Ok(_) => {
                 debug!("SPAWNING{:?} {:?}", recepie, mem);
                 spawn
                     .spawn_creep_with_options(&recepie.parts, &name, &options)
                     .unwrap();
-                Ok(())
+                say_text = format!("🔄{}", recepie.role.as_string(),)
             }
-            Err(e) => match e {
-                _ => Ok(()),
-            },
-        }
+            Err(e) => {
+                match e {
+                    screeps::ErrorCode::Busy => {
+                        say_text = format!("🔄{}", spawn.spawning().unwrap().name())
+                    }
+                    screeps::ErrorCode::NotEnough => {
+                        let energy = spawn
+                            .store()
+                            .get_used_capacity(Some(screeps::ResourceType::Power));
+                        say_text = format!(
+                            "🔨{} {}% ",
+                            recepie.role.as_string(),
+                            energy * 100 / recepie.cost()
+                        )
+                    }
+                    _ => (),
+                };
+            }
+        };
+        spawn.room().unwrap().visual().text(
+            spawn.pos().x().u8() as f32,
+            spawn.pos().y().u8() as f32 + 1.4,
+            say_text,
+            Some(TextStyle::default().color("#90B77D").stroke("2")),
+        );
+        Ok(())
     }
 }
