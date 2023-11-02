@@ -1,14 +1,11 @@
-use std::{fmt::Debug, cell::Cell};
+use std::{cell::Cell, fmt::Debug};
 
 use screeps::Creep;
 use serde::{Deserialize, Serialize};
 
 use crate::{spawn::recepie::Recepie, util::Result};
 
-use self::{
-    hauler::{HaulerManager},
-    miner::{MinerManager},
-};
+use self::{hauler::HaulerManager, miner::MinerManager};
 
 use super::CreepManager;
 
@@ -43,11 +40,11 @@ impl Role {
 }
 
 pub trait RoleManager {
-    fn run(&mut self, creep: Creep ) -> Result<()>;
+    fn run(&mut self, creep: Creep) -> Result<()>;
 }
 
 impl Debug for dyn RoleManager {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,"")
+        write!(f, "")
     }
 }
