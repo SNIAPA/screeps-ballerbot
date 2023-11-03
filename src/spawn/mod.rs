@@ -7,7 +7,7 @@ use wasm_bindgen::JsStatic;
 
 use crate::{
     creep::role::Role,
-    mem::creep::{CreepMem, GetParsedCreepMemory},
+    mem::creep::{CreepMem, ParserMemeory},
     room::{RoomManager, ROOM_MANAGERS},
     util::{error::MyError, Result, ToRustHashMap},
 };
@@ -44,6 +44,7 @@ impl SpawnManager {
         let mem = CreepMem {
             room: spawn.room().unwrap().name(),
             role: recepie.role,
+            role_mem: None,
             _move: None,
         };
 

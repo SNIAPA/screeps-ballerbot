@@ -4,7 +4,7 @@ use log::{debug, warn};
 use screeps::{find, look::ENERGY, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties};
 
 use crate::{
-    creep::CreepManager, mem::creep::GetParsedCreepMemory, spawn::recepie::Recepie, util::Result,
+    creep::CreepManager, mem::creep::ParserMemeory, spawn::recepie::Recepie, util::Result,
 };
 
 use super::{Role, RoleManager};
@@ -14,7 +14,14 @@ pub struct HaulerManager {}
 
 pub fn recepie() -> Recepie {
     Recepie {
-        parts: vec![Part::Move, Part::Carry, Part::Carry],
+        parts: vec![
+            Part::Move,
+            Part::Move,
+            Part::Carry,
+            Part::Carry,
+            Part::Carry,
+            Part::Carry,
+        ],
         role: Role::HAULER,
     }
 }

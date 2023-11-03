@@ -4,6 +4,7 @@ use js_sys::JsString;
 use log::{debug, info};
 use screeps::{game, Creep, RoomName};
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::JsValue;
 
 use crate::{
     creep::{self, role::Role, CREEP_MANAGERS},
@@ -16,6 +17,7 @@ use super::RootMem;
 pub struct CreepMem {
     pub role: Role,
     pub room: RoomName,
+    pub role_mem: Option<String>,
     pub _move: Option<MoveMem>,
 }
 
@@ -34,17 +36,24 @@ pub struct DestMem {
     y: u8,
 }
 
-pub trait GetParsedCreepMemory {
+pub trait ParserMemeory {
     fn get_parsed_memory(&self) -> Result<CreepMem>;
+    fn set_parsed_memory(&self, new_mem: CreepMem) -> Result<()>;
 }
 
-impl GetParsedCreepMemory for Creep {
+impl ParserMemeory for Creep {
     fn get_parsed_memory(&self) -> Result<CreepMem> {
         let raw_mem = js_sys::JSON::stringify(&self.memory())
             .unwrap()
             .as_string()
             .unwrap();
         Ok(serde_json::from_str::<CreepMem>(&raw_mem)?)
+    }
+    fn set_parsed_memory(&self, new_mem: CreepMem) -> Result<()> {
+        let new_mem =
+            js_sys::JSON::parse(serde_json::to_string(&new_mem).unwrap().as_str()).unwrap();
+        self.set_memory(&new_mem);
+        Ok(())
     }
 }
 

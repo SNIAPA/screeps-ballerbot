@@ -4,7 +4,7 @@ use log::{debug, warn};
 use screeps::{find, look::ENERGY, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties};
 
 use crate::{
-    creep::CreepManager, mem::creep::GetParsedCreepMemory, spawn::recepie::Recepie, util::Result,
+    creep::CreepManager, mem::creep::ParserMemeory, spawn::recepie::Recepie, util::Result,
 };
 
 use super::{Role, RoleManager};
@@ -29,47 +29,62 @@ impl RoleManager for UpgraderManager {
             None => return Ok(()),
         };
 
-        if creep.store().get_used_capacity(Some(ResourceType::Energy)) == 0 {
-            match creep.pickup(&source) {
-                Ok(_) => (),
-                Err(ErrorCode::NotInRange) => match creep.move_to(source) {
-                    Ok(_) => (),
-                    Err(ErrorCode::NoPath) => {
-                        creep.say("❌", false).unwrap();
-                    }
-                    Err(ErrorCode::Tired) => {
-                        creep.say("🚬", false).unwrap();
-                    }
-                    Err(x) => {
-                        warn!("{:#?}", x);
-                    }
-                },
-                Err(x) => {
-                    warn!("{:#?}", x);
+        let mut mem = creep.get_parsed_memory().unwrap();
+        let energy = creep.store().get_used_capacity(Some(ResourceType::Energy));
+        if energy == 0 {
+            mem.role_mem = Some("harvesting".to_owned());
+        } else if energy == creep.store().get_capacity(Some(ResourceType::Energy)) {
+            mem.role_mem = Some("upgrading".to_owned());
+        }
+        creep.set_parsed_memory(mem.clone()).unwrap();
+        if mem.role_mem.is_some() {
+            let task = mem.role_mem.unwrap();
+            match task.as_str() {
+                "harvesting" => {
+                    match creep.pickup(&source) {
+                        Ok(_) => (),
+                        Err(ErrorCode::NotInRange) => match creep.move_to(source) {
+                            Ok(_) => (),
+                            Err(ErrorCode::NoPath) => {
+                                creep.say("❌", false).unwrap();
+                            }
+                            Err(ErrorCode::Tired) => {
+                                creep.say("🚬", false).unwrap();
+                            }
+                            Err(x) => {
+                                warn!("{:#?}", x);
+                            }
+                        },
+                        Err(x) => {
+                            warn!("{:#?}", x);
+                        }
+                    };
                 }
-            };
-        } else {
-            let controller = room.controller().unwrap();
+                "upgrading" => {
+                    let controller = room.controller().unwrap();
 
-            match creep.upgrade_controller(&controller) {
-                Ok(_) => {
-                    creep.say("🏗️", false).unwrap();
+                    match creep.upgrade_controller(&controller) {
+                        Ok(_) => {
+                            creep.say("🏗️", false).unwrap();
+                        }
+                        Err(ErrorCode::NotInRange) => match creep.move_to(controller) {
+                            Ok(_) => (),
+                            Err(ErrorCode::NoPath) => {
+                                creep.say("❌", false).unwrap();
+                            }
+                            Err(ErrorCode::Tired) => {
+                                creep.say("🚬", false).unwrap();
+                            }
+                            Err(x) => {
+                                warn!("{:#?}", x);
+                            }
+                        },
+                        Err(x) => {
+                            warn!("{:#?}", x);
+                        }
+                    };
                 }
-                Err(ErrorCode::NotInRange) => match creep.move_to(controller) {
-                    Ok(_) => (),
-                    Err(ErrorCode::NoPath) => {
-                        creep.say("❌", false).unwrap();
-                    }
-                    Err(ErrorCode::Tired) => {
-                        creep.say("🚬", false).unwrap();
-                    }
-                    Err(x) => {
-                        warn!("{:#?}", x);
-                    }
-                },
-                Err(x) => {
-                    warn!("{:#?}", x);
-                }
+                _ => (),
             };
         }
         Ok(())

@@ -7,13 +7,15 @@ use std::{
 use crate::{
     creep::role::Role,
     manager::Manager,
-    mem::creep::{get_mem, GetParsedCreepMemory},
+    mem::creep::{get_mem, ParserMemeory},
     spawn::{recepie::Recepie, SpawnManager},
     util::{Result, ToRustHashMap},
 };
 
 use log::debug;
-use screeps::{game, Creep, Room, RoomName};
+use screeps::{game, Creep, Room, RoomName, RoomObjectProperties};
+
+use self::spawn_order::spawn_order;
 
 mod spawn_order;
 
@@ -21,7 +23,6 @@ mod spawn_order;
 pub struct RoomManager {
     name: RoomName,
     spawn_managers: HashMap<String, SpawnManager>,
-    spawn_order: Vec<Role>,
 }
 
 impl Manager for RoomManager {
@@ -88,8 +89,9 @@ impl RoomManager {
             },
         );
 
-        let mut order = self.spawn_order.iter().peekable();
-        self.spawn_order
+        let spawn_order = spawn_order(self.room());
+        let mut order = spawn_order.iter().peekable();
+        spawn_order
             .iter()
             .fold(None, |res, x| {
                 let curr = order.peek().unwrap();
@@ -114,26 +116,6 @@ impl RoomManager {
             name,
             spawn_managers: HashMap::new(),
             //TODO: this should be dynamic based on the rcl and if we are getting attacked, and stuff
-            spawn_order: vec![
-                Role::MINER,
-                Role::HAULER,
-                Role::MINER,
-                Role::MINER,
-                Role::HAULER,
-                Role::MINER,
-                Role::MINER,
-                Role::HAULER,
-                Role::MINER,
-                Role::MINER,
-                Role::UPGRADER,
-                Role::UPGRADER,
-                Role::UPGRADER,
-                Role::UPGRADER,
-                Role::UPGRADER,
-                Role::UPGRADER,
-                Role::UPGRADER,
-                Role::UPGRADER,
-            ],
         };
         room_manager.spawn_managers = room_manager
             .room()

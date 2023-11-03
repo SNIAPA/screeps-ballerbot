@@ -9,7 +9,7 @@ use screeps::{game, Creep, RoomName};
 
 use crate::{
     manager::Manager,
-    mem::{creep::GetParsedCreepMemory, RootMem},
+    mem::{creep::ParserMemeory, RootMem},
     util::{Result, ToRustHashMap},
 };
 
