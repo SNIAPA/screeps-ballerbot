@@ -2,10 +2,11 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     ops::{AddAssign, SubAssign},
+    str::FromStr,
 };
 
 use crate::{
-    creep::role::Role,
+    creep::role::{self, Role},
     manager::Manager,
     mem::creep::{get_mem, ParserMemeory},
     spawn::{recepie::Recepie, SpawnManager},
@@ -26,7 +27,6 @@ mod spawn_order;
 pub struct RoomManager {
     name: RoomName,
     spawn_managers: HashMap<String, SpawnManager>,
-    miner_per_source: HashMap<ObjectId<Source>, u8>,
 }
 
 impl Manager for RoomManager {
@@ -106,8 +106,8 @@ impl RoomManager {
                 }
 
                 if count > &mut 0 {
-                    count.sub_assign(1);
                     order.next();
+                    count.sub_assign(1u8);
                     return res;
                 }
                 Some(x)
@@ -118,10 +118,7 @@ impl RoomManager {
         let mut room_manager = RoomManager {
             name,
             spawn_managers: HashMap::new(),
-            miner_per_source: HashMap::new(),
         };
-        let sources = room_manager.room().find(find::SOURCES, None);
-        room_manager.miner_per_source = sources.iter().map(|x| (x.id(), 0u8)).collect();
         room_manager.spawn_managers = room_manager
             .room()
             .find(screeps::find::MY_SPAWNS, None)
@@ -138,8 +135,26 @@ impl RoomManager {
         game::rooms().get(self.name).unwrap()
     }
     pub fn assign_miner(&mut self) -> Result<Option<Source>> {
-        let source = self
-            .miner_per_source
+        let sources = self.room().find(find::SOURCES, None);
+        let miner_per_source = game::creeps().to_rust_hash_map().iter().fold(
+            sources
+                .iter()
+                .map(|x| (x.id(), 0u8))
+                .collect::<HashMap<ObjectId<Source>, u8>>(),
+            |mut acc, (_, creep)| {
+                let mem = creep.get_parsed_memory().unwrap();
+                if mem.room != self.name || mem.role != Role::MINER {
+                    return acc;
+                }
+                if let Some(source_id) = mem.role_mem {
+                    let source_id = ObjectId::<Source>::from_str(&source_id).unwrap();
+                    let miner_count = acc.get_mut(&source_id).unwrap();
+                    miner_count.add_assign(1)
+                }
+                acc
+            },
+        );
+        let source = miner_per_source
             .iter()
             .fold(None, |mut res, (source, &miners)| {
                 if miners < 3 {
@@ -153,11 +168,7 @@ impl RoomManager {
                 res
             })
             .map(|(id, _)| game::get_object_by_id_typed::<Source>(id).unwrap());
-        if let Some(source) = source.clone() {
-            let count = self.miner_per_source.get_mut(&source.id()).unwrap();
-            count.add_assign(1);
-        }
-        return Ok(source)
+        return Ok(source);
     }
 }
 

@@ -1,7 +1,9 @@
 use std::{borrow::BorrowMut, cell::Cell};
 
 use log::{debug, warn};
-use screeps::{find, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties, Source};
+use screeps::{
+    find, Creep, ErrorCode, HasTypedId, Part, ResourceType, SharedCreepProperties, Source,
+};
 
 use crate::{
     mem::creep::ParserMemeory, room::ROOM_MANAGERS, spawn::recepie::Recepie, util::Result,
@@ -28,7 +30,11 @@ impl MinerManager {
             let mut room_managers = room_manager.borrow_mut();
             let room = room_managers.get_mut(&room).unwrap();
             let source = room.assign_miner().unwrap();
-            debug!("{:?}",source);
+            if let Some(source) = source.clone() {
+                let mut mem = creep.get_parsed_memory().unwrap();
+                mem.role_mem = Some(source.id().to_string());
+                creep.set_parsed_memory(mem).unwrap();
+            }
             Ok(MinerManager { source })
         })
     }

@@ -45,5 +45,14 @@ pub fn spawn_order(room: Room) -> Vec<Role> {
     order.push(Role::UPGRADER);
     order.push(Role::UPGRADER);
     order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
     order
 }
