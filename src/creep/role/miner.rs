@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use log::{debug, warn};
-use screeps::{find, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties};
+use screeps::{find, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties, Source};
 
 use crate::{
     creep::CreepManager, mem::creep::ParserMemeory, spawn::recepie::Recepie, util::Result,
@@ -10,7 +10,8 @@ use crate::{
 use super::{Role, RoleManager};
 
 #[derive(Debug, Clone)]
-pub struct MinerManager {}
+pub struct MinerManager {
+}
 
 pub fn recepie() -> Recepie {
     Recepie {

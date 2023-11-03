@@ -17,7 +17,7 @@ pub fn recepie() -> Recepie {
         parts: vec![
             Part::Move,
             Part::Move,
-            Part::Carry,
+            Part::Move,
             Part::Carry,
             Part::Carry,
             Part::Carry,
