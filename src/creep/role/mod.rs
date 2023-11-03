@@ -38,7 +38,7 @@ impl Role {
         match self {
             Role::HAULER => hauler::recepie(),
             Role::MINER => miner::recepie(),
-            Role::UPGRADER => miner::recepie(),
+            Role::UPGRADER => upgrader::recepie(),
         }
     }
 }

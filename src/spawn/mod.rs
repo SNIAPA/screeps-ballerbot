@@ -61,7 +61,6 @@ impl SpawnManager {
         let mut say_text = String::new();
         match test {
             Ok(_) => {
-                debug!("SPAWNING{:?} {:?}", recepie, mem);
                 spawn
                     .spawn_creep_with_options(&recepie.parts, &name, &options)
                     .unwrap();
@@ -75,7 +74,7 @@ impl SpawnManager {
                     screeps::ErrorCode::NotEnough => {
                         let energy = spawn
                             .store()
-                            .get_used_capacity(Some(screeps::ResourceType::Power));
+                            .get_used_capacity(Some(screeps::ResourceType::Energy));
                         say_text = format!(
                             "🔨{} {}% ",
                             recepie.role.as_string(),

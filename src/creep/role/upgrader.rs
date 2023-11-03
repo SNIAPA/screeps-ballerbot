@@ -29,7 +29,7 @@ impl RoleManager for UpgraderManager {
             None => return Ok(()),
         };
 
-        if creep.store().get_free_capacity(None) > 0 {
+        if creep.store().get_used_capacity(Some(ResourceType::Energy)) == 0 {
             match creep.pickup(&source) {
                 Ok(_) => (),
                 Err(ErrorCode::NotInRange) => match creep.move_to(source) {
@@ -52,7 +52,9 @@ impl RoleManager for UpgraderManager {
             let controller = room.controller().unwrap();
 
             match creep.upgrade_controller(&controller) {
-                Ok(_) => (),
+                Ok(_) => {
+                    creep.say("🏗️", false).unwrap();
+                }
                 Err(ErrorCode::NotInRange) => match creep.move_to(controller) {
                     Ok(_) => (),
                     Err(ErrorCode::NoPath) => {

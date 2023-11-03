@@ -88,20 +88,25 @@ impl RoomManager {
             },
         );
 
+        let mut order = self.spawn_order.iter().peekable();
         self.spawn_order
             .iter()
-            .fold(self.spawn_order.iter().peekable(), |mut order, x| {
+            .fold(None, |res, x| {
                 let curr = order.peek().unwrap();
                 let count = created_roles.get_mut(curr).unwrap();
+
+                if res.is_some() {
+                    return res
+                }
 
                 if count > &mut 0 {
                     count.sub_assign(1);
                     order.next();
+                    return res
                 }
+                Some(x)
 
-                order
             })
-            .peek()
             .map(|x| x.get_recepie())
     }
     fn new(name: RoomName) -> Self {
@@ -114,6 +119,19 @@ impl RoomManager {
                 Role::HAULER,
                 Role::MINER,
                 Role::MINER,
+                Role::HAULER,
+                Role::MINER,
+                Role::MINER,
+                Role::HAULER,
+                Role::MINER,
+                Role::MINER,
+                Role::UPGRADER,
+                Role::UPGRADER,
+                Role::UPGRADER,
+                Role::UPGRADER,
+                Role::UPGRADER,
+                Role::UPGRADER,
+                Role::UPGRADER,
                 Role::UPGRADER,
             ],
         };
