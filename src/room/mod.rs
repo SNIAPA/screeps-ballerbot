@@ -13,7 +13,8 @@ use crate::{
 };
 
 use log::debug;
-use screeps::{game, Creep, Room, RoomName, RoomObjectProperties};
+use screeps::{find, game, Creep, Room, RoomName, RoomObjectProperties, Source};
+use web_sys::console::debug;
 
 use self::spawn_order::spawn_order;
 
@@ -77,7 +78,7 @@ impl RoomManager {
     pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {
         let mut created_roles = self.creeps().iter().fold(
             HashMap::from(
-                vec![(Role::MINER, 0), (Role::HAULER, 0),(Role::UPGRADER, 0)]
+                vec![(Role::MINER, 0), (Role::HAULER, 0), (Role::UPGRADER, 0)]
                     .iter()
                     .copied()
                     .collect::<HashMap<Role, u8>>(),
@@ -98,16 +99,15 @@ impl RoomManager {
                 let count = created_roles.get_mut(curr).unwrap();
 
                 if res.is_some() {
-                    return res
+                    return res;
                 }
 
                 if count > &mut 0 {
                     count.sub_assign(1);
                     order.next();
-                    return res
+                    return res;
                 }
                 Some(x)
-
             })
             .map(|x| x.get_recepie())
     }
@@ -131,6 +131,14 @@ impl RoomManager {
     }
     fn room(&self) -> Room {
         game::rooms().get(self.name).unwrap()
+    }
+    pub fn assign_miner(&self) -> Result<Source> {
+        Ok(self
+            .room()
+            .find(find::SOURCES, None)
+            .first()
+            .unwrap()
+            .clone())
     }
 }
 

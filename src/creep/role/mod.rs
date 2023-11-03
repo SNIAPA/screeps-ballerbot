@@ -3,11 +3,9 @@ use std::{cell::Cell, fmt::Debug};
 use screeps::Creep;
 use serde::{Deserialize, Serialize};
 
-use crate::{spawn::recepie::Recepie, util::Result};
+use crate::{spawn::recepie::Recepie, util::Result, mem::creep::ParserMemeory};
 
-use self::{hauler::HaulerManager, miner::MinerManager};
-
-use super::CreepManager;
+use self::{hauler::HaulerManager, miner::MinerManager, upgrader::UpgraderManager};
 
 pub mod hauler;
 pub mod miner;
@@ -43,12 +41,15 @@ impl Role {
     }
 }
 
+pub fn new_role_manager(creep: Creep, name: String) -> Box<dyn RoleManager> {
+    let role = creep.get_parsed_memory().unwrap().role;
+    match role {
+        Role::HAULER => Box::new(HaulerManager {}),
+        Role::MINER => Box::new(MinerManager::new(creep).unwrap()),
+        Role::UPGRADER => Box::new(UpgraderManager {}),
+    } 
+    
+}
 pub trait RoleManager {
     fn run(&mut self, creep: Creep) -> Result<()>;
-}
-
-impl Debug for dyn RoleManager {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "")
-    }
 }

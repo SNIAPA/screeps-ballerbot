@@ -10,87 +10,50 @@ use screeps::{game, Creep, RoomName};
 use crate::{
     manager::Manager,
     mem::{creep::ParserMemeory, RootMem},
-    util::{Result, ToRustHashMap},
+    util::{Result, ToRustHashMap}, creep::role::new_role_manager,
 };
 
-use self::role::{hauler::HaulerManager, miner::MinerManager, RoleManager, upgrader::UpgraderManager};
+use self::role::{
+    hauler::HaulerManager, miner::MinerManager, upgrader::UpgraderManager, RoleManager,
+};
 
-pub mod role;
 pub mod go_and_do;
+pub mod role;
 
-#[derive(Debug)]
-pub struct CreepManager {
-    pub name: String,
-    role_manager: Box<dyn RoleManager>,
+pub fn run_all() -> Result<()> {
+    CREEP_MANAGERS.with(|creep_managers_refcell| {
+        let mut creeps = game::creeps().to_rust_hash_map();
+
+        let mut creep_managers = creep_managers_refcell.borrow_mut();
+        for (name, creep_manager) in creep_managers.iter_mut() {
+            let creep = creeps.get(name).unwrap();
+            creep_manager.run(creep.clone()).unwrap();
+            creeps.remove(name);
+        }
+        for name in creeps.keys() {
+            let creep = creeps.get(name).unwrap();
+            info!("adding manager: {:?}", name);
+            let mut creep_manager = new_role_manager(creep.clone(), name.to_string());
+            creep_manager.run(creep.clone()).unwrap();
+            creep_managers.insert(name.to_string(), creep_manager);
+        }
+    });
+
+    Ok(())
 }
+pub fn setup() -> Result<()> {
+    CREEP_MANAGERS.with(|creep_managers| {
+        let mut creep_managers = creep_managers.borrow_mut();
+        let creeps = game::creeps();
 
-impl Manager for CreepManager {
-    fn run_all() -> Result<()> {
-        CREEP_MANAGERS.with(|creep_managers_refcell| {
-            let mut creeps = game::creeps().to_rust_hash_map();
-
-            let mut creep_managers = creep_managers_refcell.borrow_mut();
-            for (name, creep_manager) in creep_managers.iter_mut() {
-                creep_manager.run().unwrap();
-                creeps.remove(name);
-            }
-            for name in creeps.keys() {
-                let creep = creeps.get(name).unwrap();
-                info!("adding manager: {:?}", name);
-                let mut creep_manager = CreepManager::new(creep.clone(), name.to_string());
-                creep_manager.run().unwrap();
-                creep_managers.insert(name.to_string(), creep_manager);
-            }
+        creeps.keys().for_each(|name| {
+            let creep = creeps.get(name.clone()).unwrap();
+            creep_managers.insert(name.clone(), new_role_manager(creep, name));
         });
-
-        Ok(())
-    }
-    fn setup() -> Result<()> {
-        CREEP_MANAGERS.with(|creep_managers| {
-            let mut creep_managers = creep_managers.borrow_mut();
-            let creeps = game::creeps();
-
-            creeps.keys().for_each(|name| {
-                let creep = creeps.get(name.clone()).unwrap();
-                creep_managers.insert(name.clone(), CreepManager::new(creep, name));
-            });
-        });
-        Ok(())
-    }
-    fn run(&mut self) -> Result<()> {
-        if let Err(e) = self.role_manager.run(self.creep()) {
-            warn!("failed to run {}\n{:#?}", self.name, e)
-        };
-        Ok(())
-    }
-}
-
-impl CreepManager {
-    fn walk_and_do() -> Result<()> {
-        Ok(())
-    }
-    fn creep(&self) -> Creep {
-        game::creeps().get(self.name.clone()).unwrap()
-    }
-    pub fn new(creep: Creep, name: String) -> Self {
-        let mem = creep.get_parsed_memory().unwrap();
-
-        let role_manager: Box<dyn RoleManager> = match mem.role {
-            role::Role::MINER => Box::new(MinerManager {}),
-            role::Role::HAULER => Box::new(HaulerManager {}),
-            role::Role::UPGRADER => Box::new(UpgraderManager {}),
-        };
-
-        Self { name, role_manager }
-    }
-    pub fn on_death(&self) {
-        let raw_mem = screeps::raw_memory::get().as_string().unwrap();
-        let mut mem = serde_json::from_str::<RootMem>(&raw_mem).unwrap();
-        mem.creeps.unwrap().remove(&self.name);
-    }
+    });
+    Ok(())
 }
 
 thread_local! {
-  pub static CREEP_MANAGERS: RefCell<HashMap<String,CreepManager>> = RefCell::new(HashMap::new());
+  pub static CREEP_MANAGERS: RefCell<HashMap<String,Box<dyn RoleManager>>> = RefCell::new(HashMap::new());
 }
-

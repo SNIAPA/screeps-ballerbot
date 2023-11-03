@@ -4,7 +4,7 @@ use screeps::{game, console};
 use wasm_bindgen::prelude::*;
 
 use crate::{
-    creep::CreepManager, manager::Manager, mem::creep::clean_creeps, room::RoomManager,
+     manager::Manager, mem::creep::clean_creeps, room::RoomManager,
     spawn::SpawnManager,
 };
 
@@ -20,17 +20,15 @@ mod util;
 pub fn setup() {
     logging::setup_logging(logging::Trace);
     info!("setup");
-    //SpawnManager::setup().unwrap();
-    CreepManager::setup().unwrap();
     RoomManager::setup().unwrap();
+    creep::setup().unwrap();
 }
 
 #[wasm_bindgen(js_name = loop)]
 pub fn game_loop() {
     clean_creeps().unwrap();
-    //SpawnManager::run_all().unwrap();
-    CreepManager::run_all().unwrap();
     RoomManager::run_all().unwrap();
+    creep::run_all().unwrap();
     let heap_stats = game::cpu::get_heap_statistics();
     web_sys::console::log_1(&JsString::from(format!(
         "<font size=\"+3\">{} cpu:{}% mem:{}%</font>",

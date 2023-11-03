@@ -23,10 +23,6 @@ pub fn spawn_order(room: Room) -> Vec<Role> {
         // no fatigue walk
         let carry_parts = 3;
         let required_haulers = ((dist * 2 * miner_rate) + 10) / (carry_parts * 50);
-        debug!(
-            "required_haulers {:?}",
-            (required_haulers, dist, miner_rate, carry_parts)
-        );
 
         acc.push(Role::MINER);
         for _ in 0 .. required_haulers {
