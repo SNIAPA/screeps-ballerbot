@@ -9,7 +9,7 @@ use screeps::{
 use crate::creep::role::Role;
 
 pub fn spawn_order(room: Room) -> Vec<Role> {
-    room.find(SOURCES, None).iter().fold(vec![], |mut acc, x| {
+    let mut order = room.find(SOURCES, None).iter().fold(vec![], |mut acc, x| {
         let spawn = x
             .room()
             .unwrap()
@@ -18,9 +18,6 @@ pub fn spawn_order(room: Room) -> Vec<Role> {
             .unwrap()
             .clone();
         let dist = x.pos().get_range_to(spawn.pos());
-        acc.push(Role::MINER);
-        acc.push(Role::MINER);
-        acc.push(Role::MINER);
 
         let miner_rate = 4;
         // no fatigue walk
@@ -31,6 +28,21 @@ pub fn spawn_order(room: Room) -> Vec<Role> {
             (required_haulers, dist, miner_rate, carry_parts)
         );
 
+        acc.push(Role::MINER);
+        for _ in 0 .. required_haulers {
+
+        acc.push(Role::HAULER);
+
+        }
+        acc.push(Role::MINER);
+        acc.push(Role::MINER);
+        acc.push(Role::MINER);
+
+
         acc
-    })
+    });
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order
 }
