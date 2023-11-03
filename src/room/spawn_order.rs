@@ -32,11 +32,16 @@ pub fn spawn_order(room: Room) -> Vec<Role> {
         }
         acc.push(Role::MINER);
         acc.push(Role::MINER);
-        acc.push(Role::MINER);
 
 
         acc
     });
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
+    order.push(Role::UPGRADER);
     order.push(Role::UPGRADER);
     order.push(Role::UPGRADER);
     order.push(Role::UPGRADER);

@@ -11,7 +11,7 @@ use super::{Role, RoleManager};
 
 #[derive(Debug, Clone)]
 pub struct MinerManager {
-    source: Source,
+    source: Option<Source>,
 }
 
 pub fn recepie() -> Recepie {
@@ -25,9 +25,10 @@ impl MinerManager {
     pub fn new(creep: Creep) -> Result<Self> {
         let room = creep.get_parsed_memory().unwrap().room;
         ROOM_MANAGERS.with(|room_manager| {
-            let room_managers = room_manager.borrow();
-            let room = room_managers.get(&room).unwrap();
+            let mut room_managers = room_manager.borrow_mut();
+            let room = room_managers.get_mut(&room).unwrap();
             let source = room.assign_miner().unwrap();
+            debug!("{:?}",source);
             Ok(MinerManager { source })
         })
     }
@@ -37,14 +38,17 @@ impl RoleManager for MinerManager {
     fn run(&mut self, creep: Creep) -> Result<()> {
         let room = creep.room().unwrap();
 
-        let source = room.find(find::SOURCES, None).first().unwrap().clone();
+        if self.source.is_none() {
+            return Ok(());
+        }
+        let source = self.source.clone().unwrap();
 
         match creep.harvest(&source) {
             Ok(_) => {
                 creep.say("⛏️", false).unwrap();
                 Ok(())
             }
-            Err(ErrorCode::NotInRange) => match creep.move_to(source) {
+            Err(ErrorCode::NotInRange) => match creep.move_to(&source) {
                 Err(ErrorCode::NoPath) => {
                     creep.say("❌", false).unwrap();
                     Ok(())

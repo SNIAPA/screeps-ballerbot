@@ -13,7 +13,9 @@ use crate::{
 };
 
 use log::debug;
-use screeps::{find, game, Creep, Room, RoomName, RoomObjectProperties, Source};
+use screeps::{
+    find, game, Creep, HasTypedId, ObjectId, Room, RoomName, RoomObjectProperties, Source,
+};
 use web_sys::console::debug;
 
 use self::spawn_order::spawn_order;
@@ -24,6 +26,7 @@ mod spawn_order;
 pub struct RoomManager {
     name: RoomName,
     spawn_managers: HashMap<String, SpawnManager>,
+    miner_per_source: HashMap<ObjectId<Source>, u8>,
 }
 
 impl Manager for RoomManager {
@@ -115,8 +118,10 @@ impl RoomManager {
         let mut room_manager = RoomManager {
             name,
             spawn_managers: HashMap::new(),
-            //TODO: this should be dynamic based on the rcl and if we are getting attacked, and stuff
+            miner_per_source: HashMap::new(),
         };
+        let sources = room_manager.room().find(find::SOURCES, None);
+        room_manager.miner_per_source = sources.iter().map(|x| (x.id(), 0u8)).collect();
         room_manager.spawn_managers = room_manager
             .room()
             .find(screeps::find::MY_SPAWNS, None)
@@ -132,13 +137,27 @@ impl RoomManager {
     fn room(&self) -> Room {
         game::rooms().get(self.name).unwrap()
     }
-    pub fn assign_miner(&self) -> Result<Source> {
-        Ok(self
-            .room()
-            .find(find::SOURCES, None)
-            .first()
-            .unwrap()
-            .clone())
+    pub fn assign_miner(&mut self) -> Result<Option<Source>> {
+        let source = self
+            .miner_per_source
+            .iter()
+            .fold(None, |mut res, (source, &miners)| {
+                if miners < 3 {
+                    if let Some((_, res_miners)) = res {
+                        if miners > res_miners {
+                            return res;
+                        }
+                    }
+                    res = Some((source, miners))
+                }
+                res
+            })
+            .map(|(id, _)| game::get_object_by_id_typed::<Source>(id).unwrap());
+        if let Some(source) = source.clone() {
+            let count = self.miner_per_source.get_mut(&source.id()).unwrap();
+            count.add_assign(1);
+        }
+        return Ok(source)
     }
 }
 
