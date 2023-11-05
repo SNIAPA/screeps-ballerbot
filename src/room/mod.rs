@@ -81,7 +81,7 @@ impl RoomManager {
     pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {
         let mut created_roles = self.creeps().iter().fold(
             HashMap::from(
-                vec![(Role::MINER, 0), (Role::HAULER, 0), (Role::UPGRADER, 0)]
+                Role::all().iter().map(|&x| (x, 0u8)).collect::<Vec<_>>()
                     .iter()
                     .copied()
                     .collect::<HashMap<Role, u8>>(),

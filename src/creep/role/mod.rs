@@ -11,11 +11,6 @@ pub mod hauler;
 pub mod miner;
 pub mod upgrader;
 
-// #[derive(Debug,Clone)]
-// pub enum RoleManager {
-//     HAULER(HaulerManager),
-//     MINER(MinerManager),
-// }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Role {
@@ -25,6 +20,9 @@ pub enum Role {
 }
 
 impl Role {
+    pub fn all() -> Vec<Role>{
+        vec![Role::HAULER, Role::MINER, Role::UPGRADER]
+    }
     pub fn as_string(&self) -> &str {
         match self.get_recepie().role {
             Role::HAULER => "HAULER",
@@ -41,12 +39,6 @@ impl Role {
     }
 }
 
-pub struct RoleUnion {
-    r#enum: Role,
-    string: String,
-    recepie: Recepie,
-    manager: dyn RoleManager
-}
 
 pub fn new_role_manager(creep: Creep, name: String) -> Box<dyn RoleManager> {
     let role = creep.get_parsed_memory().unwrap().role;
