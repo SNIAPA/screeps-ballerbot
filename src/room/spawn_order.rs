@@ -8,8 +8,16 @@ use screeps::{
 
 use crate::creep::role::Role;
 
-pub fn spawn_order(room: Room) -> Vec<Role> {
-    let mut order = room.find(SOURCES, None).iter().fold(vec![], |mut acc, x| {
+use super::RoomManager;
+
+pub fn spawn_order(room_manager: &RoomManager) -> Vec<Role> {
+
+    if room_manager.creeps().len() == 0 {
+        return vec![Role::STARTER];
+    }
+
+
+    let mut order = room_manager.room().find(SOURCES, None).iter().fold(vec![], |mut acc, x| {
         let spawn = x
             .room()
             .unwrap()

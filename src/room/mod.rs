@@ -81,7 +81,10 @@ impl RoomManager {
     pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {
         let mut created_roles = self.creeps().iter().fold(
             HashMap::from(
-                Role::all().iter().map(|&x| (x, 0u8)).collect::<Vec<_>>()
+                Role::all()
+                    .iter()
+                    .map(|&x| (x, 0u8))
+                    .collect::<Vec<_>>()
                     .iter()
                     .copied()
                     .collect::<HashMap<Role, u8>>(),
@@ -93,7 +96,7 @@ impl RoomManager {
             },
         );
 
-        let spawn_order = spawn_order(self.room());
+        let spawn_order = spawn_order(self);
         let mut order = spawn_order.iter().peekable();
         spawn_order
             .iter()
