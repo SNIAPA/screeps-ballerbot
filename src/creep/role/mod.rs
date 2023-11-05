@@ -3,7 +3,7 @@ use std::{cell::Cell, fmt::Debug};
 use screeps::Creep;
 use serde::{Deserialize, Serialize};
 
-use crate::{spawn::recepie::Recepie, util::Result, mem::creep::ParserMemeory};
+use crate::{spawn::recepie::Recepie, util::error::Result, mem::creep::ParserMemeory};
 
 use self::{hauler::HaulerManager, miner::MinerManager, upgrader::UpgraderManager, starter::StarterManager};
 
@@ -54,6 +54,8 @@ pub fn new_role_manager(creep: Creep) -> Box<dyn RoleManager> {
     } 
     
 }
+
 pub trait RoleManager {
     fn run(&mut self, creep: Creep) -> Result<()>;
 }
+

@@ -3,11 +3,10 @@ use log::*;
 use screeps::{console, game};
 use wasm_bindgen::prelude::*;
 
-use crate::{manager::Manager, mem::creep::clean_creeps, room::RoomManager, spawn::SpawnManager};
+use crate::{mem::creep::clean_creeps, room::RoomManager, spawn::SpawnManager};
 
 mod creep;
 mod logging;
-mod manager;
 mod mem;
 mod room;
 mod spawn;
@@ -18,7 +17,7 @@ pub fn setup() {
     logging::setup_logging(logging::Trace);
     info!("setup");
 
-    RoomManager::setup().unwrap();
+    room::setup();
     creep::setup();
 }
 
@@ -26,12 +25,12 @@ pub fn setup() {
 pub fn game_loop() {
     clean_creeps().unwrap();
 
-    RoomManager::run_all().unwrap();
-
+    room::run_all();
     creep::run_all();
 
     print_loop_stats()
 }
+
 fn print_loop_stats() {
     let heap_stats = game::cpu::get_heap_statistics();
     web_sys::console::log_1(&JsString::from(format!(

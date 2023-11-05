@@ -3,9 +3,7 @@ use std::cell::Cell;
 use log::{debug, warn};
 use screeps::{find, look::ENERGY, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties};
 
-use crate::{
-    mem::creep::ParserMemeory, spawn::recepie::Recepie, util::Result,
-};
+use crate::{mem::creep::ParserMemeory, spawn::recepie::Recepie, util::error::Result};
 
 use super::{Role, RoleManager};
 

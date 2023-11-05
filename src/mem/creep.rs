@@ -9,7 +9,7 @@ use wasm_bindgen::JsValue;
 
 use crate::{
     creep::{self, role::Role, CREEP_MANAGERS},
-    util::{error::MyError, Result},
+    util::{error::MyError, error::Result},
 };
 
 use super::RootMem;

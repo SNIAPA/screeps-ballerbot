@@ -33,3 +33,18 @@ impl Error for MyError{
         self.source()
     }
 }
+
+pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
+
+#[macro_export]
+macro_rules! unwrap_or_print_error {
+    ($resutl:expr) => {
+        match $resutl {
+            Err(e) => error!("{}",e),
+            _ => ()
+        };
+        
+    };
+}
+
+

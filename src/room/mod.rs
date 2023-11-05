@@ -7,17 +7,16 @@ use std::{
 
 use crate::{
     creep::role::{self, Role},
-    manager::Manager,
     mem::creep::{get_mem, ParserMemeory},
     spawn::{recepie::Recepie, SpawnManager},
-    util::{Result, ToRustHashMap},
+    unwrap_or_print_error,
+    util::{error::Result, ToRustHashMap},
 };
 
-use log::debug;
+use log::{debug, error};
 use screeps::{
     find, game, Creep, HasTypedId, ObjectId, Room, RoomName, RoomObjectProperties, Source,
 };
-use web_sys::console::debug;
 
 use self::spawn_order::spawn_order;
 
@@ -29,54 +28,60 @@ pub struct RoomManager {
     spawn_managers: HashMap<String, SpawnManager>,
 }
 
-impl Manager for RoomManager {
-    fn run_all() -> Result<()> {
-        ROOM_MANAGERS.with(|room_managers| {
-            let mut room_managers = room_managers.borrow_mut();
-            room_managers.iter_mut().for_each(|(_, room_manager)| {
-                room_manager.run().unwrap();
-            });
-            Ok(())
-        })
-    }
-    fn setup() -> Result<()> {
-        ROOM_MANAGERS.with(|room_managers| {
-            let mut room_managers = room_managers.borrow_mut();
-            let rooms = game::rooms().to_rust_hash_map();
-            rooms.keys().for_each(|&name| {
-                let room_manager = RoomManager::new(name);
-                room_managers.insert(name, room_manager);
-            });
-            Ok(())
-        })
-    }
+pub fn run_all() {
+    create_managers();
+    ROOM_MANAGERS.with(|room_managers| {
+        let mut room_managers = room_managers.borrow_mut();
 
-    fn run(&mut self) -> Result<()> {
-        self.run_spawns()?;
-        Ok(())
+        room_managers.iter_mut().for_each(|(_, room_manager)| {
+            room_manager.run();
+        });
+    })
+}
+
+pub fn setup() {
+    create_managers();
+}
+
+fn create_managers() {
+    ROOM_MANAGERS.with(|room_managers| {
+        let mut room_managers = room_managers.borrow_mut();
+        let rooms = game::rooms().to_rust_hash_map();
+
+        rooms.keys().for_each(|&name| {
+            if room_managers.contains_key(&name) {
+                return;
+            }
+            let room_manager = RoomManager::new(name);
+            room_managers.insert(name, room_manager);
+        });
+    })
+}
+
+impl RoomManager {
+    fn run(&mut self) {
+        self.run_spawns();
     }
 }
 
 impl RoomManager {
     pub fn creeps(&self) -> Vec<Creep> {
-        let mem = get_mem();
-        mem.creeps
-            .unwrap_or(HashMap::new())
-            .iter()
-            .filter_map(|(name, creep)| {
-                if creep.as_ref().unwrap().room == self.name {
-                    return game::creeps().get(name.clone());
-                };
+        game::creeps()
+            .to_rust_hash_map()
+            .values()
+            .cloned()
+            .filter_map(|creep| {
+                if creep.get_parsed_memory().unwrap().room == self.name {
+                    return Some(creep);
+                }
                 None
             })
-            .collect()
+            .collect::<Vec<_>>()
     }
-    fn run_spawns(&mut self) -> Result<()> {
-        for (_, spawn_manager) in self.spawn_managers.clone().iter_mut() {
-            spawn_manager.run(self)?;
-        }
-
-        Ok(())
+    fn run_spawns(&mut self) {
+        for spawn_manager in self.spawn_managers.values() {
+            unwrap_or_print_error!(spawn_manager.run(self.get_next_creep_to_spawn()));
+        };
     }
     pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {
         let mut created_roles = self.creeps().iter().fold(

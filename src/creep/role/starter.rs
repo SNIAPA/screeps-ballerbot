@@ -6,7 +6,7 @@ use screeps::{
 };
 
 use crate::{
-    mem::creep::ParserMemeory, room::ROOM_MANAGERS, spawn::recepie::Recepie, util::Result,
+    mem::creep::ParserMemeory, room::ROOM_MANAGERS, spawn::recepie::Recepie, util::error::Result,
 };
 
 use super::{Role, RoleManager};

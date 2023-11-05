@@ -4,7 +4,6 @@ use screeps::{JsCollectionFromValue, JsHashMap};
 
 pub mod error;
 
-pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 pub trait ToRustHashMap<K, V> {
     fn to_rust_hash_map(self) -> HashMap<K, V>;

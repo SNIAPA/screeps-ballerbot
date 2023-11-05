@@ -9,7 +9,7 @@ use crate::{
     creep::role::Role,
     mem::creep::{CreepMem, ParserMemeory},
     room::{RoomManager, ROOM_MANAGERS},
-    util::{error::MyError, Result, ToRustHashMap},
+    util::{error::MyError, error::Result, ToRustHashMap},
 };
 
 use self::recepie::Recepie;
@@ -22,8 +22,8 @@ pub struct SpawnManager {
 }
 
 impl SpawnManager {
-    pub fn run(&mut self, room_manager: &mut RoomManager) -> Result<()> {
-        if let Some(recepie) = room_manager.get_next_creep_to_spawn() {
+    pub fn run(&mut self, next_creep_to_spawn: Option<Recepie>) -> Result<()> {
+        if let Some(recepie) = next_creep_to_spawn {
             self.spawn_creep(recepie).unwrap();
         }
         Ok(())
