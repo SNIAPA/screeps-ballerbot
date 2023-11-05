@@ -41,6 +41,13 @@ impl Role {
     }
 }
 
+pub struct RoleUnion {
+    r#enum: Role,
+    string: String,
+    recepie: Recepie,
+    manager: dyn RoleManager
+}
+
 pub fn new_role_manager(creep: Creep, name: String) -> Box<dyn RoleManager> {
     let role = creep.get_parsed_memory().unwrap().role;
     match role {

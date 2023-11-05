@@ -4,6 +4,7 @@ use js_sys::JsString;
 use log::{debug, info};
 use screeps::{game, Creep, RoomName};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use wasm_bindgen::JsValue;
 
 use crate::{
@@ -64,7 +65,16 @@ pub fn get_mem() -> RootMem {
         raw_mem = "{}".to_owned();
     }
 
-    serde_json::from_str::<RootMem>(&raw_mem).unwrap()
+    let mut parsed_mem = serde_json::from_str::<Value>(&raw_mem)
+        .unwrap();
+    let creeps = parsed_mem
+        .get_mut("creeps")
+        .unwrap()
+        .as_object_mut()
+        .unwrap();
+    creeps.retain(|_, v| v.get("role").is_some());
+
+    serde_json::from_value::<RootMem>(parsed_mem).unwrap()
 }
 
 pub fn clean_creeps() -> Result<()> {
