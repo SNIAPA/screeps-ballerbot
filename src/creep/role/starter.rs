@@ -21,15 +21,7 @@ pub fn recepie() -> Recepie {
     }
 }
 
-impl StarterManager {
-    pub fn new(creep: Creep) -> Result<Self> {
-        let room = creep.get_parsed_memory().unwrap().room;
-        ROOM_MANAGERS.with(|room_manager| {
-            let mut room_managers = room_manager.borrow_mut();
-            Ok(StarterManager {})
-        })
-    }
-}
+impl StarterManager {}
 
 impl RoleManager for StarterManager {
     fn run(&mut self, creep: Creep) -> Result<()> {
@@ -88,7 +80,7 @@ impl RoleManager for StarterManager {
                     warn!("{:#?}", x);
                 }
             };
-        Ok(())
+            Ok(())
         }
     }
 }

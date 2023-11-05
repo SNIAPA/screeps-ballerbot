@@ -19,7 +19,7 @@ pub fn setup() {
     info!("setup");
 
     RoomManager::setup().unwrap();
-    creep::setup().unwrap();
+    creep::setup();
 }
 
 #[wasm_bindgen(js_name = loop)]
@@ -28,7 +28,7 @@ pub fn game_loop() {
 
     RoomManager::run_all().unwrap();
 
-    creep::run_all().unwrap();
+    creep::run_all();
 
     print_loop_stats()
 }

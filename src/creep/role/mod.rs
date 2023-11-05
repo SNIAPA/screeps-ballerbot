@@ -44,7 +44,7 @@ impl Role {
 }
 
 
-pub fn new_role_manager(creep: Creep, name: String) -> Box<dyn RoleManager> {
+pub fn new_role_manager(creep: Creep) -> Box<dyn RoleManager> {
     let role = creep.get_parsed_memory().unwrap().role;
     match role {
         Role::HAULER => Box::new(HaulerManager {}),

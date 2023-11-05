@@ -8,9 +8,10 @@ use log::{debug, info, warn};
 use screeps::{game, Creep, RoomName};
 
 use crate::{
+    creep::role::new_role_manager,
     manager::Manager,
     mem::{creep::ParserMemeory, RootMem},
-    util::{Result, ToRustHashMap}, creep::role::new_role_manager,
+    util::{Result, ToRustHashMap},
 };
 
 use self::role::{
@@ -20,38 +21,45 @@ use self::role::{
 pub mod go_and_do;
 pub mod role;
 
-pub fn run_all() -> Result<()> {
+pub fn run_all() {
+    create_managers();
+
     CREEP_MANAGERS.with(|creep_managers_refcell| {
+        let mut creep_managers = creep_managers_refcell.borrow_mut();
+
         let mut creeps = game::creeps().to_rust_hash_map();
 
-        let mut creep_managers = creep_managers_refcell.borrow_mut();
+        //run existing creep managers
         for (name, creep_manager) in creep_managers.iter_mut() {
             let creep = creeps.get(name).unwrap();
             creep_manager.run(creep.clone()).unwrap();
             creeps.remove(name);
         }
-        for name in creeps.keys() {
-            let creep = creeps.get(name).unwrap();
+    });
+}
+
+pub fn create_managers() {
+    CREEP_MANAGERS.with(|creep_managers_refcell| {
+        let mut creep_managers = creep_managers_refcell.borrow_mut();
+
+        let creeps = game::creeps().to_rust_hash_map();
+
+        //create managers for creeps that dont have one
+        for (name, creep) in creeps.iter() {
+            if creep_managers.contains_key(name) {
+                continue;
+            }
+
             info!("adding manager: {:?}", name);
-            let mut creep_manager = new_role_manager(creep.clone(), name.to_string());
-            creep_manager.run(creep.clone()).unwrap();
+
+            let creep_manager = new_role_manager(creep.clone());
             creep_managers.insert(name.to_string(), creep_manager);
         }
     });
-
-    Ok(())
 }
-pub fn setup() -> Result<()> {
-    CREEP_MANAGERS.with(|creep_managers| {
-        let mut creep_managers = creep_managers.borrow_mut();
-        let creeps = game::creeps();
 
-        creeps.keys().for_each(|name| {
-            let creep = creeps.get(name.clone()).unwrap();
-            creep_managers.insert(name.clone(), new_role_manager(creep, name));
-        });
-    });
-    Ok(())
+pub fn setup() {
+    create_managers()
 }
 
 thread_local! {
