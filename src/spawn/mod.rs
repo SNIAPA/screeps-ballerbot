@@ -86,9 +86,10 @@ impl SpawnManager {
                 };
             }
         };
+        let pos = spawn.pos();
         spawn.room().unwrap().visual().text(
-            spawn.pos().x().u8() as f32,
-            spawn.pos().y().u8() as f32 + 1.4,
+            pos.x().u8() as f32,
+            pos.y().u8() as f32 + 1.4,
             say_text,
             Some(TextStyle::default().color("#90B77D").stroke("2")),
         );
