@@ -140,9 +140,9 @@ impl RoomManager {
     fn room(&self) -> Room {
         game::rooms().get(self.name).unwrap()
     }
-    fn miner_per_source(&self) -> {
+    fn miner_per_source(&self) -> HashMap<ObjectId<Source>, u8> {
         let sources = self.room().find(find::SOURCES, None);
-        let miner_per_source = game::creeps().trhm().values().fold(
+        game::creeps().trhm().values().fold(
             sources
                 .iter()
                 .map(|x| (x.id(), 0))
@@ -159,10 +159,10 @@ impl RoomManager {
                 }
                 acc
             },
-        );
+        )
     }
     pub fn assign_miner(&mut self) -> Result<Option<Source>> {
-        let next_source = miner_per_source
+        let next_source = self.miner_per_source()
             .iter()
             .fold(None, |mut res, (source, &miners)| {
                 if miners < 3 {
