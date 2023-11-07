@@ -3,6 +3,7 @@ use std::{
     collections::HashMap,
     ops::{AddAssign, SubAssign},
     str::FromStr,
+    sync::{Arc, Mutex},
 };
 
 use crate::{
@@ -25,46 +26,42 @@ mod spawn_order;
 #[derive(Debug)]
 pub struct RoomManager {
     name: RoomName,
-    spawn_managers: RefCell<HashMap<String, SpawnManager>>,
-}
-
-pub fn run_all() {
-    create_managers();
-    ROOM_MANAGERS.with(|room_managers| {
-        let mut room_managers = room_managers.borrow_mut();
-
-        room_managers.iter_mut().for_each(|(_, room_manager)| {
-            room_manager.run();
-        });
-    })
-}
-
-pub fn setup() {
-    create_managers();
-}
-
-fn create_managers() {
-    ROOM_MANAGERS.with(|room_managers| {
-        let mut room_managers = room_managers.borrow_mut();
-        let rooms = game::rooms().trhm();
-
-        rooms.keys().for_each(|&name| {
-            if room_managers.contains_key(&name) {
-                return;
-            }
-            let room_manager = RoomManager::new(name);
-            room_managers.insert(name, room_manager);
-        });
-    })
+    spawn_managers: Arc<Mutex<HashMap<String, SpawnManager>>>,
 }
 
 impl RoomManager {
     fn run(&mut self) {
         self.run_spawns();
     }
-}
+    pub fn run_all() {
+        RoomManager::create_managers();
+        ROOM_MANAGERS.with(|room_managers| {
+            let mut room_managers = room_managers.borrow_mut();
 
-impl RoomManager {
+            room_managers.iter_mut().for_each(|(_, room_manager)| {
+                room_manager.run();
+            });
+        })
+    }
+
+    pub fn setup() {
+        RoomManager::create_managers();
+    }
+
+    fn create_managers() {
+        ROOM_MANAGERS.with(|room_managers| {
+            let mut room_managers = room_managers.borrow_mut();
+            let rooms = game::rooms().trhm();
+
+            rooms.keys().for_each(|&name| {
+                if room_managers.contains_key(&name) {
+                    return;
+                }
+                let room_manager = RoomManager::new(name);
+                room_managers.insert(name, room_manager);
+            });
+        })
+    }
     pub fn creeps(&self) -> Vec<Creep> {
         game::creeps()
             .trhm()
@@ -79,8 +76,9 @@ impl RoomManager {
             .collect::<Vec<_>>()
     }
     fn run_spawns(&mut self) {
-        let spawns_managers = self.spawn_managers.clone();
-        for spawn_manager in spawns_managers.borrow_mut().values_mut() {
+        let spawn_managers = self.spawn_managers.clone();
+        let mut spawn_managers = spawn_managers.lock().unwrap();
+        for spawn_manager in spawn_managers.values_mut() {
             unwrap_or_print_error!(spawn_manager.run(self));
         }
     }
@@ -123,10 +121,10 @@ impl RoomManager {
     fn new(name: RoomName) -> Self {
         let room_manager = RoomManager {
             name,
-            spawn_managers: RefCell::new(HashMap::new()),
+            spawn_managers: Arc::new(Mutex::new(HashMap::new())),
         };
-        let mut spawn_managers = room_manager.spawn_managers.clone();
-        let spawn_managers = spawn_managers.get_mut();
+        let spawn_managers = room_manager.spawn_managers.clone();
+        let mut spawn_managers = spawn_managers.lock().unwrap();
         room_manager
             .room()
             .find(screeps::find::MY_SPAWNS, None)
@@ -148,7 +146,7 @@ impl RoomManager {
                 .iter()
                 .map(|x| (x.id(), 0))
                 .collect::<HashMap<_, u8>>(),
-            |mut acc,  creep| {
+            |mut acc, creep| {
                 let mem = creep.get_parsed_memory().unwrap();
                 if mem.room != self.name || mem.role != Role::MINER {
                     return acc;
@@ -163,7 +161,8 @@ impl RoomManager {
         )
     }
     pub fn assign_miner(&mut self) -> Result<Option<Source>> {
-        let next_source = self.miner_per_source()
+        let next_source = self
+            .miner_per_source()
             .iter()
             .fold(None, |mut res, (source, &miners)| {
                 if miners < 3 {
