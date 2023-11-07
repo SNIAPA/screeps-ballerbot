@@ -79,8 +79,9 @@ impl RoomManager {
             .collect::<Vec<_>>()
     }
     fn run_spawns(&mut self) {
-        for spawn_manager in self.spawn_managers.borrow_mut().values_mut() {
-            unwrap_or_print_error!(spawn_manager.run(self.get_next_creep_to_spawn()));
+        let spawns_managers = self.spawn_managers.clone();
+        for spawn_manager in spawns_managers.borrow_mut().values_mut() {
+            unwrap_or_print_error!(spawn_manager.run(self));
         }
     }
     pub fn get_next_creep_to_spawn(&self) -> Option<Recepie> {

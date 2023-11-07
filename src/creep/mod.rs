@@ -15,7 +15,7 @@ pub fn run_all() {
     CREEP_MANAGERS.with(|creep_managers_refcell| {
         let mut creep_managers = creep_managers_refcell.borrow_mut();
 
-        let mut creeps = game::creeps().to_rust_hash_map();
+        let mut creeps = game::creeps().trhm();
 
         //run existing creep managers
         creep_managers.iter_mut().for_each(|(name, creep_manager)| {
@@ -30,7 +30,7 @@ fn create_managers() {
     CREEP_MANAGERS.with(|creep_managers_refcell| {
         let mut creep_managers = creep_managers_refcell.borrow_mut();
 
-        let creeps = game::creeps().to_rust_hash_map();
+        let creeps = game::creeps().trhm();
 
         //create managers for creeps that dont have one
         creeps.iter().for_each(|(name, creep)| {
