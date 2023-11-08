@@ -7,6 +7,8 @@ use crate::{spawn::recepie::Recepie, util::error::Result, mem::creep::ParserMeme
 
 use self::{hauler::HaulerManager, miner::MinerManager, upgrader::UpgraderManager, starter::StarterManager};
 
+use super::CreeepManager;
+
 pub mod hauler;
 pub mod miner;
 pub mod upgrader;
@@ -44,18 +46,8 @@ impl Role {
 }
 
 
-pub fn new_role_manager(creep: Creep) -> Box<dyn RoleManager> {
-    let role = creep.get_parsed_memory().unwrap().role;
-    match role {
-        Role::HAULER => Box::new(HaulerManager {}),
-        Role::MINER => Box::new(MinerManager::new(creep).unwrap()),
-        Role::UPGRADER => Box::new(UpgraderManager {}),
-        Role::STARTER => Box::new(StarterManager {}),
-    } 
-    
-}
 
 pub trait RoleManager {
-    fn run(&mut self, creep: Creep) -> Result<()>;
+    fn run(&mut self, creep_manager: &mut CreeepManager) -> Result<()>;
 }
 

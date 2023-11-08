@@ -3,7 +3,7 @@ use std::cell::Cell;
 use log::{debug, warn};
 use screeps::{find, look::ENERGY, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties};
 
-use crate::{mem::creep::ParserMemeory, spawn::recepie::Recepie, util::error::Result};
+use crate::{mem::creep::ParserMemeory, spawn::recepie::Recepie, util::error::Result, creep::CreeepManager};
 
 use super::{Role, RoleManager};
 
@@ -24,7 +24,7 @@ pub fn recepie() -> Recepie {
     }
 }
 impl RoleManager for HaulerManager {
-    fn run(&mut self, creep: Creep) -> Result<()> {
+    fn run(&mut self, creep_manager: CreeepManager) -> Result<()> {
         let room = creep.room().unwrap();
         let source = match room
             .find(screeps::constants::find::DROPPED_RESOURCES, None)

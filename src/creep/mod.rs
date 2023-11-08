@@ -1,20 +1,26 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::{cell::RefCell, collections::HashMap, sync::{Arc, Mutex}};
 
 use log::info;
 use screeps::{game, Creep, SharedCreepProperties};
 
-use crate::{util::{error::*, ToRustHashMap}, mem::creep::ParserMemeory};
+use crate::{
+    mem::creep::ParserMemeory,
+    util::{error::*, ToRustHashMap},
+};
 
-use self::role::{RoleManager, hauler::HaulerManager, miner::MinerManager, upgrader::UpgraderManager, starter::StarterManager, Role};
+use self::role::{
+    hauler::HaulerManager, miner::MinerManager, starter::StarterManager, upgrader::UpgraderManager,
+    Role, RoleManager,
+};
 
 pub mod role;
 
 pub struct CreeepManager {
-    role_manager: Box<dyn RoleManager>,
+    role_manager: Arc<Mutex<Box<dyn RoleManager>>>,
     name: String,
 }
 impl CreeepManager {
-    pub fn new(creep: Creep) -> CreeepManager{
+    pub fn new(creep: Creep) -> CreeepManager {
         let name = creep.name();
 
         let role = creep.get_parsed_memory().unwrap().role;
@@ -24,20 +30,13 @@ impl CreeepManager {
             Role::UPGRADER => Box::new(UpgraderManager {}),
             Role::STARTER => Box::new(StarterManager {}),
         };
-        CreeepManager {
-            name,
-            role_manager
-        }
+        CreeepManager { name, role_manager: Arc::new(Mutex::new(role_manager)) }
     }
     pub fn run(&mut self) -> Result<()> {
-        let creep = game::creeps()
-            .trhm()
-            .get(&self.name)
-            .ok_or(MyError {
-                message: format!("failed to get creep {}", self.name),
-            })?
-            .clone();
-        self.role_manager.run(creep)
+        let role_manager = self.role_manager.clone();
+        role_manager.lock().unwrap().run(self)
+    }
+    pub fn get_creep(&self) {
     }
     pub fn setup() {
         CreeepManager::create_managers()
