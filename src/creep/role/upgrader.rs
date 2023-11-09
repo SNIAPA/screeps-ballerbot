@@ -7,7 +7,7 @@ use crate::{
     creep::CreepManager,
     mem::creep::ParserMemeory,
     spawn::recepie::Recepie,
-    util::error::{MyError, Result},
+    util::error::{MyError, Result, ToMyErr},
 };
 
 use super::{Role, RoleManager};
@@ -42,7 +42,7 @@ impl RoleManager for UpgraderManager {
         }
 
         creep.set_parsed_memory(mem.clone())?;
-        let task = mem.role_mem.ok_or(MyError::new("invalid task"))?;
+        let task = mem.role_mem.to_my_err("invalid task")?;
         match task.as_str() {
             "harvesting" => match creep.pickup(&source) {
                 Err(ErrorCode::NotInRange) => creep.move_to(source),
@@ -51,7 +51,7 @@ impl RoleManager for UpgraderManager {
             "upgrading" => {
                 let controller = room
                     .controller()
-                    .ok_or(MyError::new("controller not found"))?;
+                    .to_my_err("controller not found")?;
 
                 match creep.upgrade_controller(&controller) {
                     Err(ErrorCode::NotInRange) => creep.move_to(controller),

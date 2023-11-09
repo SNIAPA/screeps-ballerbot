@@ -2,25 +2,26 @@ use std::{error::Error, fmt};
 
 use screeps::ErrorCode;
 
-
 #[derive(Debug, Clone)]
-pub struct MyError{
-    pub message: String
+pub struct MyError {
+    pub message: String,
 }
 
-impl fmt::Display for MyError{
+impl fmt::Display for MyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,"{}", self.message)
+        write!(f, "{}", self.message)
     }
 }
 
 impl From<ErrorCode> for MyError {
-    fn from(code:ErrorCode) -> Self{
-        MyError{message: format!("ErrorCode: {:?}", code) }
+    fn from(code: ErrorCode) -> Self {
+        MyError {
+            message: format!("ErrorCode: {:?}", code),
+        }
     }
 }
 
-impl Error for MyError{
+impl Error for MyError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         None
     }
@@ -36,21 +37,32 @@ impl Error for MyError{
 
 impl MyError {
     pub fn new(message: &str) -> MyError {
-        MyError { message: message.to_string() }
+        MyError {
+            message: message.to_string(),
+        }
     }
 }
 
 pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
+pub trait ToMyErr<T> {
+    fn to_my_err(self, message: &str) -> Result<T>;
+}
+impl<T> ToMyErr<T> for Option<T> {
+    fn to_my_err(self, message: &str) -> Result<T> {
+        Ok(self.ok_or(MyError::new(message))?)
+        
+    }
+
+}
+
+
 #[macro_export]
 macro_rules! unwrap_or_print_error {
     ($resutl:expr) => {
         match $resutl {
-            Err(e) => error!("{}",e),
-            _ => ()
+            Err(e) => error!("{}", e),
+            _ => (),
         };
-        
     };
 }
-
-

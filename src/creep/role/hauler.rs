@@ -7,7 +7,7 @@ use crate::{
     creep::CreepManager,
     mem::creep::ParserMemeory,
     spawn::recepie::Recepie,
-    util::error::{MyError, Result},
+    util::error::{MyError, Result, ToMyErr},
 };
 
 use super::{Role, RoleManager};
@@ -50,7 +50,7 @@ impl RoleManager for HaulerManager {
             let spawn = room
                 .find(screeps::constants::find::MY_SPAWNS, None)
                 .first()
-                .ok_or(MyError::new("cant find spawn"))?
+                .to_my_err("cant find spawn")?
                 .clone();
 
             match creep.transfer(&spawn, ResourceType::Energy, None) {

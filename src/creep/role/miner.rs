@@ -10,7 +10,7 @@ use crate::{
     mem::creep::ParserMemeory,
     room::ROOM_MANAGERS,
     spawn::recepie::Recepie,
-    util::error::{MyError, Result},
+    util::error::{MyError, Result, ToMyErr},
 };
 
 use super::{Role, RoleManager};
@@ -51,7 +51,7 @@ impl RoleManager for MinerManager {
         let room = creep_manager.room()?;
         let creep = creep_manager.creep()?;
 
-        let source = self.source.clone().ok_or(MyError::new("source not set"))?;
+        let source = self.source.clone().to_my_err("source not set")?;
 
         match creep.harvest(&source) {
             Err(ErrorCode::NotInRange) => creep.move_to(&source),
