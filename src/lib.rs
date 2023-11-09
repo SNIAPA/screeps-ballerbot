@@ -16,6 +16,7 @@ mod util;
 pub fn setup() {
     logging::setup_logging(logging::Trace);
     info!("setup");
+    clean_creeps().unwrap();
 
     RoomManager::setup();
     CreepManager::setup();

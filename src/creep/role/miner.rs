@@ -1,9 +1,10 @@
-use std::{borrow::BorrowMut, cell::Cell};
+use std::{borrow::BorrowMut, cell::Cell, str::FromStr};
 
 use log::{debug, warn};
 use screeps::{
-    find, Creep, ErrorCode, HasTypedId, Part, ResourceType, SharedCreepProperties, Source,
+    find, game, Creep, ErrorCode, HasTypedId, Part, ResourceType, SharedCreepProperties, Source, ObjectId,
 };
+use serde::__private::de;
 
 use crate::{
     creep::CreepManager,
@@ -16,9 +17,7 @@ use crate::{
 use super::{Role, RoleManager};
 
 #[derive(Debug, Clone)]
-pub struct MinerManager {
-    source: Option<Source>,
-}
+pub struct MinerManager {}
 
 pub fn recepie() -> Recepie {
     Recepie {
@@ -41,17 +40,23 @@ impl MinerManager {
                 mem.role_mem = Some(source.id().to_string());
                 creep.set_parsed_memory(mem).unwrap();
             }
-            MinerManager { source }
+            MinerManager {}
         })
+    }
+    pub fn source(&self, creep: Creep) -> Result<Option<Source>> {
+        if let Some(source_id) = creep.get_parsed_memory()?.role_mem {
+            let source_id = ObjectId::<Source>::from_str(&source_id)?;
+            return Ok(game::get_object_by_id_typed::<Source>(&source_id));
+        }
+        Ok(None)
     }
 }
 
 impl RoleManager for MinerManager {
     fn run(&mut self, creep_manager: &mut CreepManager) -> Result<()> {
-        let room = creep_manager.room()?;
         let creep = creep_manager.creep()?;
 
-        let source = self.source.clone().to_my_err("source not set")?;
+        let source = self.source(creep.clone())?.to_my_err("no source assigned")?;
 
         match creep.harvest(&source) {
             Err(ErrorCode::NotInRange) => creep.move_to(&source),

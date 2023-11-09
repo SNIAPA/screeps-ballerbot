@@ -75,7 +75,9 @@ pub fn get_mem() -> Result<RootMem> {
         creeps
             .as_object_mut()
             .unwrap()
-            .retain(|_, v| v.get("role").is_some());
+            .retain(|_, v| {
+                v.get("role").is_some()
+            });
     }
 
     Ok(serde_json::from_value::<RootMem>(parsed_mem)?)

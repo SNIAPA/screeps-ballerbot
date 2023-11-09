@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use js_sys::Math::ceil;
 use log::debug;
 use screeps::{
     find::{MY_STRUCTURES, SOURCES},
@@ -15,19 +16,24 @@ pub fn spawn_order(room_manager: &RoomManager) -> Vec<Role> {
         return vec![Role::STARTER];
     }
 
-    let mut order = room_manager
+    let order = room_manager
         .room()
         .find(SOURCES, None)
         .iter()
-        .fold(vec![], |mut acc, x| {
-            let spawn = x
+        .fold(vec![], |mut acc, source| {
+            // resource regenerated every 300 ticks and one work part harvests 2 per tick
+            let required_work_parts = (source.energy_capacity() / (300 * 2)) as f64;
+            // our miners have 2 work parts
+            let mut required_miners = ceil(required_work_parts / 2f64) as usize;
+
+            let spawn = source
                 .room()
                 .unwrap()
                 .find(MY_STRUCTURES, None)
                 .first()
                 .unwrap()
                 .clone();
-            let dist = x.pos().get_range_to(spawn.pos());
+            let dist = source.pos().get_range_to(spawn.pos());
 
             let miner_rate = 4;
             // no fatigue walk
@@ -35,31 +41,15 @@ pub fn spawn_order(room_manager: &RoomManager) -> Vec<Role> {
             let required_haulers = ((dist * 2 * miner_rate) + 10) / (carry_parts * 50);
 
             acc.push(Role::MINER);
+            required_miners -= 1;
             for _ in 0..required_haulers {
                 acc.push(Role::HAULER);
             }
-            acc.push(Role::MINER);
-            acc.push(Role::MINER);
+            for _ in 0..required_miners {
+                acc.push(Role::MINER);
+            }
 
             acc
         });
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
-    order.push(Role::UPGRADER);
     order
 }

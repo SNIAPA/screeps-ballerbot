@@ -92,8 +92,6 @@ impl CreepManager {
                     return;
                 }
 
-                info!("adding manager: {:?}", name);
-
                 let creep_manager = CreepManager::new(creep.clone());
                 creep_managers.insert(name.to_string(), creep_manager);
             });

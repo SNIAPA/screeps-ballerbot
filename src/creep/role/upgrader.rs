@@ -60,7 +60,7 @@ impl RoleManager for UpgraderManager {
             }
             _ => Ok(()),
         }
-        .map_err(MyError::from);
+        .map_err(MyError::from)?;
         Ok(())
     }
 }
