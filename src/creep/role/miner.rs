@@ -6,7 +6,11 @@ use screeps::{
 };
 
 use crate::{
-    mem::creep::ParserMemeory, room::ROOM_MANAGERS, spawn::recepie::Recepie, util::error::Result,
+    creep::CreepManager,
+    mem::creep::ParserMemeory,
+    room::ROOM_MANAGERS,
+    spawn::recepie::Recepie,
+    util::error::{MyError, Result},
 };
 
 use super::{Role, RoleManager};
@@ -24,55 +28,36 @@ pub fn recepie() -> Recepie {
 }
 
 impl MinerManager {
-    pub fn new(creep: Creep) -> Result<Self> {
+    pub fn new(creep: Creep) -> Self {
         let room = creep.get_parsed_memory().unwrap().room;
         ROOM_MANAGERS.with(|room_manager| {
             let mut room_managers = room_manager.borrow_mut();
+
             let room = room_managers.get_mut(&room).unwrap();
             let source = room.assign_miner().unwrap();
+
             if let Some(source) = source.clone() {
                 let mut mem = creep.get_parsed_memory().unwrap();
                 mem.role_mem = Some(source.id().to_string());
                 creep.set_parsed_memory(mem).unwrap();
             }
-            Ok(MinerManager { source })
+            MinerManager { source }
         })
     }
 }
 
 impl RoleManager for MinerManager {
-    fn run(&mut self, creep: Creep) -> Result<()> {
-        let room = creep.room().unwrap();
+    fn run(&mut self, creep_manager: &mut CreepManager) -> Result<()> {
+        let room = creep_manager.room()?;
+        let creep = creep_manager.creep()?;
 
-        if self.source.is_none() {
-            return Ok(());
-        }
-        let source = self.source.clone().unwrap();
+        let source = self.source.clone().ok_or(MyError::new("source not set"))?;
 
         match creep.harvest(&source) {
-            Ok(_) => {
-                creep.say("⛏️", false).unwrap();
-                Ok(())
-            }
-            Err(ErrorCode::NotInRange) => match creep.move_to(&source) {
-                Err(ErrorCode::NoPath) => {
-                    creep.say("❌", false).unwrap();
-                    Ok(())
-                }
-                Err(ErrorCode::Tired) => {
-                    creep.say("🚬", false).unwrap();
-                    Ok(())
-                }
-                Err(x) => {
-                    warn!("{:#?}", x);
-                    Ok(())
-                }
-                Ok(_) => Ok(()),
-            },
-            x => {
-                warn!("{:?}", x);
-                Ok(())
-            }
+            Err(ErrorCode::NotInRange) => creep.move_to(&source),
+            x => x,
         }
+        .map_err(MyError::from)?;
+        Ok(())
     }
 }

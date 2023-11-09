@@ -34,6 +34,12 @@ impl Error for MyError{
     }
 }
 
+impl MyError {
+    pub fn new(message: &str) -> MyError {
+        MyError { message: message.to_string() }
+    }
+}
+
 pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[macro_export]

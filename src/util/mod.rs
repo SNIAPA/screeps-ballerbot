@@ -17,3 +17,5 @@ impl<K: std::cmp::Eq + Hash + JsCollectionFromValue, V: JsCollectionFromValue>
         self.keys().zip(self.values()).collect::<HashMap<K, V>>()
     }
 }
+
+

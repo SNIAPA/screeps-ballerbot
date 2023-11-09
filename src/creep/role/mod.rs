@@ -7,7 +7,7 @@ use crate::{spawn::recepie::Recepie, util::error::Result, mem::creep::ParserMeme
 
 use self::{hauler::HaulerManager, miner::MinerManager, upgrader::UpgraderManager, starter::StarterManager};
 
-use super::CreeepManager;
+use super::CreepManager;
 
 pub mod hauler;
 pub mod miner;
@@ -48,6 +48,6 @@ impl Role {
 
 
 pub trait RoleManager {
-    fn run(&mut self, creep_manager: &mut CreeepManager) -> Result<()>;
+    fn run(&mut self, creep_manager: &mut CreepManager) -> Result<()>;
 }
 

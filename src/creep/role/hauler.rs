@@ -3,7 +3,12 @@ use std::cell::Cell;
 use log::{debug, warn};
 use screeps::{find, look::ENERGY, Creep, ErrorCode, Part, ResourceType, SharedCreepProperties};
 
-use crate::{mem::creep::ParserMemeory, spawn::recepie::Recepie, util::error::Result, creep::CreeepManager};
+use crate::{
+    creep::CreepManager,
+    mem::creep::ParserMemeory,
+    spawn::recepie::Recepie,
+    util::error::{MyError, Result},
+};
 
 use super::{Role, RoleManager};
 
@@ -24,8 +29,9 @@ pub fn recepie() -> Recepie {
     }
 }
 impl RoleManager for HaulerManager {
-    fn run(&mut self, creep_manager: CreeepManager) -> Result<()> {
-        let room = creep.room().unwrap();
+    fn run(&mut self, creep_manager: &mut CreepManager) -> Result<()> {
+        let creep = creep_manager.creep()?;
+        let room = creep_manager.room()?;
         let source = match room
             .find(screeps::constants::find::DROPPED_RESOURCES, None)
             .first()
@@ -36,48 +42,22 @@ impl RoleManager for HaulerManager {
 
         if creep.store().get_free_capacity(None) > 0 {
             match creep.pickup(&source) {
-                Ok(_) => (),
-                Err(ErrorCode::NotInRange) => match creep.move_to(source) {
-                    Ok(_) => (),
-                    Err(ErrorCode::NoPath) => {
-                        creep.say("❌", false).unwrap();
-                    }
-                    Err(ErrorCode::Tired) => {
-                        creep.say("🚬", false).unwrap();
-                    }
-                    Err(x) => {
-                        warn!("{:#?}", x);
-                    }
-                },
-                Err(x) => {
-                    warn!("{:#?}", x);
-                }
-            };
+                Err(ErrorCode::NotInRange) => creep.move_to(source),
+                x => x,
+            }
+            .map_err(MyError::from)?;
         } else {
             let spawn = room
                 .find(screeps::constants::find::MY_SPAWNS, None)
                 .first()
-                .unwrap()
+                .ok_or(MyError::new("cant find spawn"))?
                 .clone();
 
             match creep.transfer(&spawn, ResourceType::Energy, None) {
-                Ok(_) => (),
-                Err(ErrorCode::NotInRange) => match creep.move_to(spawn) {
-                    Ok(_) => (),
-                    Err(ErrorCode::NoPath) => {
-                        creep.say("❌", false).unwrap();
-                    }
-                    Err(ErrorCode::Tired) => {
-                        creep.say("🚬", false).unwrap();
-                    }
-                    Err(x) => {
-                        warn!("{:#?}", x);
-                    }
-                },
-                Err(x) => {
-                    warn!("{:#?}", x);
-                }
-            };
+                Err(ErrorCode::NotInRange) => creep.move_to(spawn),
+                x => x,
+            }
+            .map_err(MyError::from)?;
         }
         Ok(())
     }
