@@ -39,6 +39,7 @@ impl CreepManager {
             role_manager: Arc::new(Mutex::new(role_manager)),
         }
     }
+
     pub fn run(&mut self) {
         let role_manager = self.role_manager.clone();
         let mut role_manager = role_manager.lock().unwrap();
@@ -46,19 +47,23 @@ impl CreepManager {
             warn!("{} - {}", self.name, e)
         }
     }
+
     pub fn creep(&self) -> Result<Creep> {
         game::creeps()
             .values()
             .find(|creep| creep.name() == self.name)
             .to_my_err("cannot get creep")
     }
+
     pub fn room(&self) -> Result<Room> {
         let room = self.creep()?.get_parsed_memory()?.room;
         Ok(game::rooms().get(room).to_my_err("room not found")?)
     }
+
     pub fn setup() {
         CreepManager::create_managers()
     }
+
     pub fn run_all() {
         CreepManager::create_managers();
 
